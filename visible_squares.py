@@ -12,6 +12,12 @@ import time
 # Primary Export/Functionality
 ################################################################################
 def visibleTiles(position,distance,board):
+  '''
+  Returns a set containing all the positons within the given manhattan distance
+  that are visible from the current position. In this context, visible means
+  that a straight line can be drawn between the two positions without being
+  obstructed by a wall on our board.
+  '''
   visible_tiles = set()
   for loc in grabFrontier(position,distance):
     rayTrace(position,loc,board,visible_tiles)
@@ -20,6 +26,10 @@ def visibleTiles(position,distance,board):
 # Helper Functions
 ################################################################################
 def rayTrace(start,end,board,tile_set):
+  '''
+  Traces a line between the two given positions and walks down this line to
+  determine all the "visible" tiles it passes through.
+  '''
   dx = abs(start[0] - end[0])
   dy = abs(start[1] - end[1])
   x = start[0]
@@ -68,6 +78,10 @@ def rayTrace(start,end,board,tile_set):
           tile_set.add((x,y))
 
 def grabFrontier(point,d):
+  '''
+  Grabs the positions of all the tiles at the edge of the visible range. These
+  will be used to generate our rays.
+  '''
   x = point[0]
   y = point[1]
   frontier = []
@@ -79,6 +93,10 @@ def grabFrontier(point,d):
   return frontier
 
 def onBoard(x,y,board):
+  '''
+  Returns a boolean value indicating if the given x,y coordinate is a valid
+  index for our board.
+  '''
   n = board.shape[0]
   return 0<=x<=n and 0<=y<=n
 
@@ -86,6 +104,10 @@ def onBoard(x,y,board):
 # Unit Tests
 ################################################################################
 def timeTest(n,d):
+  '''
+  Unit test to make sure the visibleTiles function is efficient and runs
+  in a reasonable amount of time for the problem sizes we intend to use.
+  '''
   N = n**2
   board = np.zeros((2*(d+1)+1,2*(d+1)+1),np.int)
   center = (d+1,d+1)
@@ -101,6 +123,9 @@ def timeTest(n,d):
   
 
 def testVisibleTiles():
+  '''
+  Unit test for the visibleTiles function to make sure it is working properly.
+  '''
   board = np.array([
     [True,True,True,True,True,True,True,True,True],
     [True,True,True,True,False,True,True,True,True],
@@ -121,6 +146,9 @@ def testVisibleTiles():
   print(board.astype(int))
 
 def testRayTrace():
+  '''
+  Unit test for the rayTrace function to make sure it is working properly.
+  '''
   test_board = np.array([
     [False,False,False,False,False,False,False],
     [False,False,False,False,False,False,False],
@@ -140,6 +168,9 @@ def testRayTrace():
   print(test_board)
 
 def testFrontier():
+  '''
+  Unit test for the grabFrontier function to make sure it is working properly.
+  '''
   d = 5
   test_board = np.zeros((2*d+1,2*d+1),np.int)
   center = (d,d)
@@ -151,7 +182,7 @@ def testFrontier():
 # Main for Running Unit Tests
 ################################################################################
 if __name__ == "__main__":
-  timeTest(100,5)
+  timeTest(200,5)
   # testVisibleTiles()
   # testRayTrace()
   # testFrontier()
