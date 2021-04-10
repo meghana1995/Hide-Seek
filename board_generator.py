@@ -18,7 +18,8 @@ def generateBoard(radius, seed, cutoffs, scales, opening_width, second_pass=Fals
     '''
     width = radius*2 +1
     board = np.zeros((width, width), np.bool_)
-    simplex = OpenSimplex(seed)
+    simplex1 = OpenSimplex(seed)
+    simplex2 = OpenSimplex(seed*2)
     # first pass generates large scale features of board
     for i in range(0,width):
         for j in range(0,width):
@@ -29,11 +30,11 @@ def generateBoard(radius, seed, cutoffs, scales, opening_width, second_pass=Fals
                 x = (i-radius)
                 y = (j-radius)
                 # first pass generates large scale features of board
-                simplex_value = (simplex.noise2d(x/scales[0], y/scales[0]) + 1 )*sigmoid(dist,opening_width) / 2
+                simplex_value = (simplex1.noise2d(x/scales[0], y/scales[0]) + 1 )*sigmoid(dist,opening_width) / 2
                 board[i][j] = (simplex_value > cutoffs[0])
                 # second pass generates small scale features of board
                 if (second_pass and board[i][j] != True):
-                    simplex_value = (simplex.noise2d(x/scales[1], y/scales[1]) + 1 )*sigmoid(dist,opening_width) / 2
+                    simplex_value = (simplex2.noise2d(x/scales[1], y/scales[1]) + 1 )*sigmoid(dist,opening_width) / 2
                     board[i][j] = (simplex_value > cutoffs[1])
             
     return board

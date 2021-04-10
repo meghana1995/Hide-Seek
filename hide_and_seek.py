@@ -4,7 +4,7 @@ Created on Mar 31, 2021
 @author: kmegh
 '''
 # Imports
-############################################################################
+################################################################################
 # python packages
 import turtle
 import time
@@ -18,15 +18,15 @@ import board_generator
 
 
 # Parameters for Grid
-#######################################################################################################  
+################################################################################
 radius = 50
 square_size = 7
 hider_start = (30,30)
 seeker_start = (0,0)
 # seed = 1
 seed = math.floor(np.random.rand()*456132545)
-simplex_cutoffs = ( .65 , .65 )
-simplex_scales = ( 5 , 2.5 )
+simplex_cutoffs = ( .67 , .67 )
+simplex_scales = ( 10 , 5 )
 opening_width = 3
 second_pass = True
 
@@ -36,8 +36,10 @@ squeeze_ratio = square_size / 24
 
 
 # Generate Grid
-#######################################################################################################     
-grid = board_generator.generateBoard(radius, seed, simplex_cutoffs, simplex_scales, opening_width, second_pass)
+################################################################################ 
+grid = board_generator.generateBoard(
+  radius, seed, simplex_cutoffs, simplex_scales, opening_width, second_pass
+)
 
 
 # Functions for transforming from position to board (x,y) position
