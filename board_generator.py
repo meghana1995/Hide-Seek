@@ -4,17 +4,23 @@ Created on Apr 8, 2021
 @author: young
 '''
 
+
+# Imports
+################################################################################
 from opensimplex import OpenSimplex
 import numpy as np
 
+
+# Primary Export/Functionality
+################################################################################
 def generateBoard(radius, seed, cutoffs, scales, opening_width, second_pass=False):
     '''
-    Generates board as an numpy.array of boolean values. True values indicate walls
-    and False values indicate on open board. True values populated using the Simplex
-    noise function for the given cutoff value, scale, and random seed. Does a second
-    pass over the unfilled areas (for adding more granularity) if prescribed. Also
-    forces the center of the grid to be more open, to hopefully prevent closed mazes
-    using the opening_width value.
+    Generates board as an numpy.array of boolean values. True values indicate
+    walls and False values indicate on open board. True values populated using
+    the Simplex noise function for the given cutoff value, scale, and random
+    seed. Does a second pass over the unfilled areas (for adding more
+    granularity) if prescribed. Also forces the center of the grid to be more
+    open, to hopefully prevent closed mazes using the opening_width value.
     '''
     width = radius*2 +1
     board = np.zeros((width, width), np.bool_)
@@ -40,6 +46,8 @@ def generateBoard(radius, seed, cutoffs, scales, opening_width, second_pass=Fals
     return board
 
 
+# Helper Functions
+################################################################################
 def centerDist(i,j,radius):
     '''
     Calculates the Manhattan distance from the center of the board.
@@ -49,6 +57,10 @@ def centerDist(i,j,radius):
     return abs(x) + abs(y)
 
 def sigmoid(x,y):
+    '''
+    Sigmoid function with respect to x, offset by value y. Used to gradually
+    increase likelihood of walls as we move away from the center of the board.
+    '''
     return 1 / (1 + np.exp(-(x-y)))
 
 
