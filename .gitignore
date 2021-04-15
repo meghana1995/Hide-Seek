@@ -2,6 +2,9 @@
 .vscode/
 .idea/
 
+# Eclipse Project
+.project
+
 # Vagrant
 .vagrant/
 
