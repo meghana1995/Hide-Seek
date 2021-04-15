@@ -4,9 +4,10 @@ Created on Apr 9, 2021
 @author: young
 '''
 
+# Imports
+################################################################################
 import numpy as np
 import time
-
 
 
 # Primary Export/Functionality
@@ -97,8 +98,8 @@ def onBoard(x,y,board):
   Returns a boolean value indicating if the given x,y coordinate is a valid
   index for our board.
   '''
-  n = board.shape[0]
-  return 0<=x<=n and 0<=y<=n
+  (n,m) = board.shape
+  return 0<=x<n and 0<=y<m
 
 
 # Unit Tests
