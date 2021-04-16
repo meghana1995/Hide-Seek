@@ -36,13 +36,17 @@ class Agent:
   be extended to create both our Hiding and Seeking Agents.
   '''
 
-  def __init__(self, environment, start_pos, vision_range):
+  def __init__(self, env_shape, start_pos, vision_range):
     '''
-    Initializes new Hiding Agent instance.
+    Initializes new Agent instance.
     '''
-    # set the environment, start positon, and visible range of the agent
-    self.environment = environment
+    # initialize the agent's belief state of the environment as unknown
+    # -1 == unknown , 0 == open , 1 == wall
+    self.environment = np.full(env_shape, -1, np.int)
+    # initialize agent's start position and label it as open
     self.position = start_pos
+    self.environment[start_pos[0]][start_pos[1]] = 0
+    # initialize agent's vision range
     self.vision_range = vision_range
 
   def performAction(self, action):
@@ -57,7 +61,7 @@ class Agent:
       self.position[1] + change[1],
     )
     # set agent position to new position if valid
-    if (self.environment.isValidPos(new_position)):
+    if (self.environment[new_position] == 0):
       self.position = new_position
 
   def validActions(self):
@@ -74,31 +78,47 @@ class Agent:
         self.position[0] + change[0],
         self.position[1] + change[1],
       )
-      if (self.environment.isValidPos(new_position)):
+      if (self.environment[new_position] == 0):
         valid_actions.append(action)
     # return valid actions
     return valid_actions
 
-  def visiblePositions(self):
+  def updateState(self, open_squares, wall_squares):
     '''
-    Returns a set containing all the positons within the given manhattan distance
-    that are visible from the current position. In this context, visible means
-    that a straight line can be drawn between the two positions without being
-    obstructed by a wall on our board.
+    This function allows the agent to update its belief state of the environment
+    based off the open and wall squares it is able to perceive.
     '''
-    return self.environment.visibleTiles(self.position, self.vision_range)
+    # update open_squares in belief state
+    for square in open_squares:
+      self.environment[square] = 0
+    for square in wall_squares:
+      self.environment[square] = 1
 
+  def resetState(self,start_position):
+    '''
+    Resets the agent's belief state back to its original state.
+    '''
+    self.environment.fill(-1)
+    self.environment[start_position] = 0
+
+  def randomAction(self):
+    '''
+    Returns a random valid action
+    '''
+    valid_actions = self.validActions()
+    random_index = math.floor(np.random.random()*len(valid_actions))
+    return valid_actions[random_index]
 
 
 # Unit Tests
 ################################################################################
 if __name__ == "__main__":
 
-  # create test environment
-  test_environment = Environment()
-
   # create test agent
-  test_agent = Agent()
+  test_agent = Agent((11,11), (5,5), 3)
 
-  
+  # print environment
+  print(test_agent.environment)
+
+
     

@@ -16,7 +16,6 @@ import math
 import board_generator
 
 
-
 # Parameters for Grid
 ################################################################################
 radius = 50
@@ -29,6 +28,7 @@ simplex_cutoffs = ( .67 , .67 )
 simplex_scales = ( 10 , 5 )
 opening_width = 3
 second_pass = True
+
 
 # Parameters for Visualization
 ################################################################################

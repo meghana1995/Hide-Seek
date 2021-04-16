@@ -15,12 +15,10 @@ import board_generator
 import visible_squares
 
 
-# Parameters for Grid
+# Parameters for Board
 ################################################################################
-radius = 50
+radius = 5
 square_size = 7
-hider_start = (30,30)
-seeker_start = (0,0)
 # seed = 1
 seed = math.floor(np.random.rand()*456132545)
 simplex_cutoffs = ( .67 , .67 )
@@ -54,7 +52,7 @@ class Environment:
     Returns the index of the position at the center of the board.
     '''
     ( n , m ) = self.board.shape
-    return ( math.floor(n) , math.floor(m) )
+    return ( math.floor(n/2) , math.floor(m/2) )
 
   def isWall(self, position):
     '''
@@ -79,14 +77,15 @@ class Environment:
     '''
     return (not self.isWall(position)) and self.isOnBoard(position)
 
-  def visibleNeighbors(self, position, distance):
+  def perceiveEnv(self, agent):
     '''
-    Returns a set containing all the positons within the given manhattan distance
-    that are visible from the current position. In this context, visible means
-    that a straight line can be drawn between the two positions without being
-    obstructed by a wall on our board.
+    Returns two sets, one containing all the open positons within the given
+    manhattan distance that are visible from the current position and the other
+    containing the visible walls. In this context, visible means that a straight
+    line can be drawn between the two positions without being obstructed by a
+    wall on our board.
     '''
-    return visible_squares.visibleTiles(position, distance, self.board)
+    return visible_squares.visibleTiles(agent.position, agent.vision_range, self.board)
 
 
 # Unit Tests

@@ -14,23 +14,27 @@ import time
 ################################################################################
 def visibleTiles(position,distance,board):
   '''
-  Returns a set containing all the positons within the given manhattan distance
-  that are visible from the current position. In this context, visible means
-  that a straight line can be drawn between the two positions without being
-  obstructed by a wall on our board.
+  Returns two sets, one containing all the open positons within the given
+  manhattan distance that are visible from the current position and the other
+  containing the visible walls. In this context, visible means that a straight
+  line can be drawn between the two positions without being obstructed by a
+  wall on our board.
   '''
-  visible_tiles = set()
+  open_squares = set()
+  wall_squares = set()
   for loc in grabFrontier(position,distance):
-    rayTrace(position,loc,board,visible_tiles)
-  return visible_tiles
+    rayTrace(position,loc,board,open_squares,wall_squares)
+  return open_squares, wall_squares
+
 
 # Helper Functions
 ################################################################################
-def rayTrace(start,end,board,tile_set):
+def rayTrace(start,end,board,open_set,wall_set):
   '''
   Traces a line between the two given positions and walks down this line to
   determine all the "visible" tiles it passes through.
   '''
+  # initialize variables for walking down line
   dx = abs(start[0] - end[0])
   dy = abs(start[1] - end[1])
   x = start[0]
@@ -42,41 +46,65 @@ def rayTrace(start,end,board,tile_set):
   dx *= 2
   dy *= 2
 
+  # walk down line until we hit a wall, are off the board, or reach the end of the line
+  # while doing so, keep track of all tiles we encounter as "visible" tiles
   i = 0
-  while (i < n and onBoard(x,y,board)):
+  while (i < n and onBoard(x,y,board) and not board[x,y]):
+    # if error is > 0 then move horizontally
     if (error > 0):
+      # move to next tile
       x += x_inc
       error -= dy
       i += 1
-      if (board[x][y]):
+      # add next tile to appropriate set, break if it is a wall
+      if (board[x,y]):
+        wall_set.add((x,y))
         break
       else:
-        tile_set.add((x,y))
+        open_set.add((x,y))
+    # if error is < 0 then move vertically
     elif (error < 0):
+      # move to next tile
       y += y_inc
       error += dx
       i += 1
-      if (board[x][y]):
+      # add next tile to appropriate set, break if it is a wall
+      if (board[x,y]):
+        wall_set.add((x,y))
         break
       else:
-        tile_set.add((x,y))
+        open_set.add((x,y))
+    # else error is = 0 so move vertically and horizontally
     else:
-      if (board[x+x_inc][y] and board[x][y+y_inc]):
+      # if both tiles on corner are walls then stop
+      if (board[x+x_inc,y] and board[x,y+y_inc]):
+        wall_set.add((x+x_inc,y))
+        wall_set.add((x,y+y_inc))
         break
+      # else at least one tile is open so keep walking down line
       else:
-        if (not board[x+x_inc][y]):
-          tile_set.add((x+x_inc,y))
-        if (not board[x][y+y_inc]):
-          tile_set.add((x,y+y_inc))
+        # check if each tile on corner
+        if (board[x+x_inc,y]):
+          wall_set.add((x+x_inc,y))
+        else:
+          open_set.add((x+x_inc,y))
+        if (board[x,y+y_inc]):
+          wall_set.add((x,y+y_inc))
+        else:
+          open_set.add((x,y+y_inc))
+        # move to next tile
         i += 2
         x += x_inc
         error += dx
         y += y_inc
         error -= dy
-        if (board[x][y]):
+        # add next tile to appropriate set, break if it is a wall
+        if (board[x,y]):
+          wall_set.add((x,y))
           break
         else:
-          tile_set.add((x,y))
+          open_set.add((x,y))
+
 
 def grabFrontier(point,d):
   '''
@@ -92,6 +120,7 @@ def grabFrontier(point,d):
     frontier.append(( x-d+i , y-i ))
     frontier.append(( x+i , y-d+i ))
   return frontier
+
 
 def onBoard(x,y,board):
   '''
@@ -114,7 +143,7 @@ def timeTest(n,d):
   center = (d+1,d+1)
   t0 = time.time()
   for i in range(N):
-    visible_tiles = visibleTiles(center,d,board)
+    open , walls = visibleTiles(center,d,board)
   t1 = time.time()
   total = t1-t0
   print("Number of Instances: {}".format(N))
@@ -140,11 +169,15 @@ def testVisibleTiles():
   ],np.bool_)
   distance = 3
   position = (4,4)
-  visible_tiles = visibleTiles(position,distance,board)
-  print(visible_tiles)
-  for (x,y) in visible_tiles:
-    board[x][y] = True
-  print(board.astype(int))
+  open , walls = visibleTiles(position,distance,board)
+  output = np.zeros((9,9),np.int)
+  print(open)
+  print(walls)
+  for (x,y) in open:
+    output[x][y] = 1
+  for (x,y) in walls:
+    output[x][y] = 2
+  print(output)
 
 def testRayTrace():
   '''
@@ -159,12 +192,14 @@ def testRayTrace():
     [False,False,False,False,False,False,False],
     [False,False,False,False,False,False,False],
   ],np.bool_)
-  tile_set = set()
+  open_set = set()
+  wall_set = set()
   start = (3,1)
   end = (6,6)
-  rayTrace(start,end,test_board,tile_set)
-  print(tile_set)
-  for point in tile_set:
+  rayTrace(start,end,test_board,open_set,wall_set)
+  print(open_set)
+  print(wall_set)
+  for point in open_set:
     test_board[point[0]][point[1]] = True
   print(test_board)
 
@@ -183,7 +218,7 @@ def testFrontier():
 # Main for Running Unit Tests
 ################################################################################
 if __name__ == "__main__":
-  timeTest(200,5)
+  timeTest(100,5)
   # testVisibleTiles()
   # testRayTrace()
   # testFrontier()
