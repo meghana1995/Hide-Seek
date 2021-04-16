@@ -52,7 +52,8 @@ class Agent:
   def performAction(self, action):
     '''
     Makes the agent perform the given action and updates agent's internal
-    data accordingly.
+    data accordingly. Returns True if action succesfully completed else
+    returns False.
     '''
     # calculate new position based off action
     change = ALLOWED_ACTIONS[action]
@@ -63,6 +64,9 @@ class Agent:
     # set agent position to new position if valid
     if (self.environment[new_position] == 0):
       self.position = new_position
+      return True
+    else:
+      return False
 
   def validActions(self):
     '''

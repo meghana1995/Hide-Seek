@@ -8,6 +8,7 @@ Created on Apr 14, 2021
 ################################################################################
 
 # python packages
+from Visualization import Visualization
 import numpy as np
 import math
 
@@ -131,19 +132,49 @@ class HideAndSeek:
     print("Finished Hide & Seek Simulation")
     print("Seeker Time: {}".format(self.clock))
 
-  def visualizeGame():
+  def visualizeGame(self):
     '''
     This function simulates and visualizes an entire game of Hide & Seek.
     '''
-    # TODO
-    pass
+    # print start message
+    print("Starting Hide & Seek Simulation")
+
+    # initialize visualization
+    visualization = Visualization(self.environment, self.hiding_agent, self.seeking_agent)
+
+    # hiding segment of game
+    for i in range(self.hiding_time):
+      self.hidingStep()
+      visualization.moveHider()
+      print("Step {} Hiding Agent Pos: {}".format(self.clock,self.hiding_agent.position))
+
+    # reset clock
+    self.resetClock()
+    
+    # seeking segment of game
+    while (self.seeking_agent.position != self.hiding_agent.position):
+      self.seekingStep()
+      visualization.moveSeeker()
+      print("Step {} Seeking Agent Pos: {}".format(self.clock,self.seeking_agent.position))
+
+    # print end message
+    print("Finished Hide & Seek Simulation")
+    print("Seeker Time: {}".format(self.clock))
+
+    # end visualization
+    visualization.endVis()
 
 
 # Unit Tests
 ################################################################################
 if __name__ == "__main__":
+  
+  # # test simulation
+  # game = HideAndSeek(20,3)
+  # game.simulateGame()
+
   # test simulation
-  game = HideAndSeek(100,3)
-  game.simulateGame()
+  game = HideAndSeek(20,3)
+  game.visualizeGame()
   
     

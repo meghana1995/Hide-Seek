@@ -17,7 +17,7 @@ import visible_squares
 
 # Parameters for Board
 ################################################################################
-radius = 5
+radius = 10
 square_size = 7
 # seed = 1
 seed = math.floor(np.random.rand()*456132545)
