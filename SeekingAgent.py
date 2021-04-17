@@ -29,14 +29,42 @@ class SeekingAgent(Agent):
     '''
     # call to super
     super().__init__(env_shape, start_pos, vision_range)
+    # store position of hider (None until hider perceived)
+    self.hider_position = None
+
+  def updateState(self, open_squares, wall_squares, hider_position):
+    '''
+    This function allows the agent to update its belief state of the environment
+    based off the percepts it receives.
+    '''
+    # call super to update environment based off visible squares
+    super().updateState(open_squares, wall_squares)
+    # update game clock
+    self.hider_position = hider_position
+
+  def resetState(self, start_position):
+    '''
+    Resets the agent's belief state back to its original state.
+    '''
+    super().resetState(start_position)
+    self.hider_position = None
 
   def getAction(self):
     '''
     This funciton represents the Seeking Agent determining what action to carry
     out next while trying to find the Hiding Agent.
     '''
-    # for now just returns a random valid acton
-    return self.randomAction()
+    # if agent has plan then follow this plan
+    if (self.plan is not None):
+      return self.plan.pop(0)
+    # else if hider position is know build a plan and execute first action
+    elif (self.hider_position is not None):
+      self.plan = self.aStar(self.hider_position)
+      return self.plan.pop(0)
+    # else use algorithm to pick next action
+    else:
+      # for now just returns a random valid acton
+      return self.randomAction()
 
 
 # Unit Tests

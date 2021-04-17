@@ -8,11 +8,13 @@ Created on Apr 14, 2021
 ################################################################################
 
 # python packages
-import numpy as np
+import heapq
 import math
+import numpy as np
 
 # local files
 from Environment import Environment
+import helper_util
 
 
 # Constants
@@ -48,6 +50,8 @@ class Agent:
     self.environment[start_pos[0]][start_pos[1]] = 0
     # initialize agent's vision range
     self.vision_range = vision_range
+    # initialize agent's plan as None
+    self.plan = None
 
   def performAction(self, action):
     '''
@@ -67,6 +71,18 @@ class Agent:
       return True
     else:
       return False
+
+  def validAction(self,position,action):
+    '''
+    Checks if given action is valid. Action is said to be valid if the action
+    moves the agent into a square that is open.
+    '''
+    change = ALLOWED_ACTIONS[action]
+    new_position = ( 
+      position[0] + change[0],
+      position[1] + change[1],
+    )
+    return self.environment[new_position] == 0
 
   def validActions(self):
     '''
@@ -104,6 +120,7 @@ class Agent:
     '''
     self.environment.fill(-1)
     self.environment[start_position] = 0
+    self.plan = None
 
   def randomAction(self):
     '''
@@ -112,6 +129,60 @@ class Agent:
     valid_actions = self.validActions()
     random_index = math.floor(np.random.random()*len(valid_actions))
     return valid_actions[random_index]
+
+  def aStar(self,goal):
+    '''
+    Returns list of actions that take the agent from it's current
+    position to the given goal position.
+    '''
+    # initialize priority queue using current position and set of visited positions
+    count = 0
+    queue = [(
+      0,
+      count,
+      { 
+        "g": 0,
+        "h": 0,
+        "position": self.position,
+        "path": [],
+      }
+    )]
+    visited = set()
+    # iteratively extend paths by pulling off queue and extending position
+    while (len(queue) > 0):
+      # pop off shortest path and add to vistited
+      current = heapq.heappop(queue)[2]
+      visited.add(current["position"])
+      # if we reached the goal, then return its path
+      if (current["position"] == goal):
+        return current["path"]
+      # extend path to each of this positions neighbors
+      for action, change in ALLOWED_ACTIONS.items():
+        # get new position for action
+        new_position = ( 
+          current["position"][0] + change[0],
+          current["position"][1] + change[1],
+        )
+        # add position to queue if valid and not already visited
+        if (new_position not in visited and self.environment[new_position] == 0):
+          # calculate g and h
+          g = current["g"] + 1
+          h = helper_util.ManhattanDist(new_position,goal)
+          # extend path
+          new_path = current["path"] + [action]
+          # define next object to add to queue
+          count += 1
+          next = { 
+            "g": g,
+            "h": h,
+            "position": new_position,
+            "path": new_path,
+          }
+          heapq.heappush(queue, ( g+h, count, next ))
+    # return None if we reach here (no path found)
+    return None
+
+      
 
 
 # Unit Tests
