@@ -26,6 +26,7 @@ ALLOWED_ACTIONS = {
   "left":   (-1,0),
   "up":     (0,1),
   "down":   (0,-1),
+  "nothing": (0,0),
 }
 
 

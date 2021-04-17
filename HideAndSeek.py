@@ -182,7 +182,7 @@ class HideAndSeek:
 if __name__ == "__main__":
   
   # # test simulation
-  # game = HideAndSeek(300,4)
+  # game = HideAndSeek(50,3)
   # game.simulateGame()
 
   # test simulation
