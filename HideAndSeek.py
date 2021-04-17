@@ -186,7 +186,7 @@ if __name__ == "__main__":
   # game.simulateGame()
 
   # test simulation
-  game = HideAndSeek(50,8)
+  game = HideAndSeek(50,3)
   game.visualizeGame()
   
     

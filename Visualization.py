@@ -22,7 +22,7 @@ import board_generator
 ################################################################################
 square_size = 20
 squeeze_ratio = square_size / 24
-sleep_time = .2
+sleep_time = 0
 
 
 # Primary Export/Functionality
