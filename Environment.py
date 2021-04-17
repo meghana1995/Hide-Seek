@@ -19,8 +19,8 @@ import visible_squares
 ################################################################################
 radius = 10
 square_size = 7
-# seed = 1
-seed = math.floor(np.random.rand()*456132545)
+seed = 1
+#seed = math.floor(np.random.rand()*456132545)
 simplex_cutoffs = ( .67 , .67 )
 simplex_scales = ( 10 , 5 )
 opening_width = 3

@@ -77,6 +77,17 @@ class HideAndSeek:
     self.env_shape = self.environment.board.shape
     self.resetAgents()
 
+  def foundHider(self,open_set,wall_set,hider_position):
+    '''
+    Determines if the seeker found the hider. In other words, this function
+    checks if the hider is positioned in one of the perceivable squares. If so,
+    it returns the hider position, else it returns None.
+    '''
+    found_hider = hider_position in open_set or hider_position in wall_set
+    if found_hider:
+      return hider_position
+    else:
+      return None
 
   def hidingStep(self):
     '''
@@ -86,9 +97,9 @@ class HideAndSeek:
     '''
     # let agent perceive the environment and update belief state
     open , walls = self.environment.perceiveEnv(self.hiding_agent)
-    self.hiding_agent.updateState(open, walls)
+    self.hiding_agent.updateState(open, walls, self.clock)
     # get next action from agent and allow it to perform said action
-    action = self.hiding_agent.getAction(self.clock)
+    action = self.hiding_agent.getAction()
     self.hiding_agent.performAction(action)
     # update game clock
     self.tickClock()
@@ -101,7 +112,8 @@ class HideAndSeek:
     '''
     # let agent perceive the environment and update belief state
     open , walls = self.environment.perceiveEnv(self.seeking_agent)
-    self.seeking_agent.updateState(open, walls)
+    hider_position = self.foundHider(open,walls,self.hiding_agent.position)
+    self.seeking_agent.updateState(open,walls,hider_position)
     # get next action from agent and allow it to perform said action
     action = self.seeking_agent.getAction()
     self.seeking_agent.performAction(action)
@@ -170,11 +182,11 @@ class HideAndSeek:
 if __name__ == "__main__":
   
   # # test simulation
-  # game = HideAndSeek(20,3)
+  # game = HideAndSeek(300,4)
   # game.simulateGame()
 
   # test simulation
-  game = HideAndSeek(20,3)
+  game = HideAndSeek(50,3)
   game.visualizeGame()
   
     
