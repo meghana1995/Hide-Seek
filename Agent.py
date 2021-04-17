@@ -46,7 +46,9 @@ class Agent:
     # initialize the agent's belief state of the environment as unknown
     # -1 == unknown , 0 == open , 1 == wall
     self.environment = np.full(env_shape, -1, np.int)
+    self.visibility_table = {}
     # initialize agent's start position and label it as open
+    self.start_position = start_pos
     self.position = start_pos
     self.environment[start_pos[0]][start_pos[1]] = 0
     # initialize agent's vision range
@@ -104,23 +106,39 @@ class Agent:
     # return valid actions
     return valid_actions
 
-  def updateState(self, open_squares, wall_squares):
+  def updateVisTable(self, position, open_squares):
+    '''
+    Update the visibility table for the agent using the given set of
+    visbile open squares and the position to be updated.
+    '''
+    if (position in self.visibility_table):
+      self.visibility_table[position] = self.visibility_table[position].union(open_squares)
+    else:
+      self.visibility_table[position] = open_squares
+
+  def updateState(self, open_squares, wall_squares, visibilityTable):
     '''
     This function allows the agent to update its belief state of the environment
     based off the open and wall squares it is able to perceive.
     '''
-    # update open_squares in belief state
+    # update visibility table for current position
+    self.updateVisTable(self.position, open_squares)
+    # update environment and visibility table for open squares
     for square in open_squares:
       self.environment[square] = 0
+      self.updateVisTable(square, visibilityTable[square])
+    # update environment for wall squares
     for square in wall_squares:
       self.environment[square] = 1
+    print(len(self.visibility_table))
 
-  def resetState(self,start_position):
+  def resetState(self):
     '''
     Resets the agent's belief state back to its original state.
     '''
     self.environment.fill(-1)
-    self.environment[start_position] = 0
+    self.environment[self.start_position] = 0
+    self.position = self.start_position
     self.plan = None
 
   def randomAction(self):

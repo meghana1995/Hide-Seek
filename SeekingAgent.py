@@ -32,21 +32,21 @@ class SeekingAgent(Agent):
     # store position of hider (None until hider perceived)
     self.hider_position = None
 
-  def updateState(self, open_squares, wall_squares, hider_position):
+  def updateState(self, open_squares, wall_squares, visibilityTable, hider_position):
     '''
     This function allows the agent to update its belief state of the environment
     based off the percepts it receives.
     '''
     # call super to update environment based off visible squares
-    super().updateState(open_squares, wall_squares)
+    super().updateState(open_squares, wall_squares, visibilityTable)
     # update game clock
     self.hider_position = hider_position
 
-  def resetState(self, start_position):
+  def resetState(self):
     '''
     Resets the agent's belief state back to its original state.
     '''
-    super().resetState(start_position)
+    super().resetState()
     self.hider_position = None
 
   def getAction(self):

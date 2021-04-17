@@ -38,7 +38,7 @@ class Environment:
   out.
   '''
 
-  def __init__(self):
+  def __init__(self,distance):
     '''
     Initializes new Environment instance.
     '''
@@ -46,6 +46,8 @@ class Environment:
     self.board = board_generator.generateBoard(
       radius, seed, simplex_cutoffs, simplex_scales, opening_width, second_pass
     )
+    # matrix of sets that represent the squares visible from each position
+    self.visibility_table = visible_squares.visibilityTable(self.board,distance)
 
   def getMiddlePos(self):
     '''
@@ -79,13 +81,25 @@ class Environment:
 
   def perceiveEnv(self, agent):
     '''
-    Returns two sets, one containing all the open positons within the given
-    manhattan distance that are visible from the current position and the other
-    containing the visible walls. In this context, visible means that a straight
-    line can be drawn between the two positions without being obstructed by a
-    wall on our board.
+    Returns info that each agent perceives from the environment. As of now, this
+    includes 3 objects. The first two are sets of the open positions and wall
+    positions visible from the agents current position. The third object, is
+    a table (dictionary) that contains the visible open squares for each open
+    square that is visible. I.e. the agent can percieve both the tiles visible
+    from its position, and which of these tiles are visible with respect to one
+    another.
     '''
-    return visible_squares.visibleTiles(agent.position, agent.vision_range, self.board)
+    # get squares visible from current position
+    open_set , walls_set = self.visibility_table[agent.position]
+    # determine which of these open squares are visible to one another
+    visibilityTable = {}
+    for position in open_set:
+      open , walls = self.visibility_table[position]
+      visible = open.intersection(open_set)
+      visible.add(agent.position)
+      visibilityTable[position] = visible
+    # return objects
+    return open_set , walls_set , visibilityTable
 
 
 # Unit Tests
