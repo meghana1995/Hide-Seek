@@ -130,7 +130,6 @@ class Agent:
     # update environment for wall squares
     for square in wall_squares:
       self.environment[square] = 1
-    print(len(self.visibility_table))
 
   def resetState(self):
     '''
