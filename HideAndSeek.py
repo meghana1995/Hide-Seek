@@ -8,6 +8,7 @@ Created on Apr 14, 2021
 ################################################################################
 
 # python packages
+from visible_squares import visibilityTable
 from Visualization import Visualization
 import numpy as np
 import math
@@ -37,14 +38,15 @@ class HideAndSeek:
     '''
     Initializes new Hiding Agent instance.
     '''
+    # save the input parameters (used when resetting elements)
+    self.hiding_time = hiding_time
+    self.vision_range = vision_range
     # set the environment and agents for the game
-    self.environment = Environment()
+    self.environment = Environment(vision_range)
     self.start_position = self.environment.getMiddlePos()
     self.env_shape = self.environment.board.shape
     self.hiding_agent = HidingAgent(self.env_shape, self.start_position, vision_range)
     self.seeking_agent = SeekingAgent(self.env_shape, self.start_position, vision_range)
-    # set the amount of time allowed for the agent to hide
-    self.hiding_time = hiding_time
     # initialize internal clock for the game
     self.clock = 0
 
@@ -64,15 +66,15 @@ class HideAndSeek:
     '''
     Resets belief states of the agents.
     '''
-    self.hiding_agent.resetState(self.start_position)
-    self.seeking_agent.resetState(self.start_position)
+    self.hiding_agent.resetState()
+    self.seeking_agent.resetState()
 
   def resetEnv(self):
     '''
     Creates a new environment for the game and resets agents for said
     environment.
     '''
-    self.environment = Environment()
+    self.environment = Environment(self.vision_range)
     self.start_position = self.environment.getMiddlePos()
     self.env_shape = self.environment.board.shape
     self.resetAgents()
@@ -96,8 +98,8 @@ class HideAndSeek:
     action and updates the game accordingly.
     '''
     # let agent perceive the environment and update belief state
-    open , walls = self.environment.perceiveEnv(self.hiding_agent)
-    self.hiding_agent.updateState(open, walls, self.clock)
+    open , walls , visibilityTable = self.environment.perceiveEnv(self.hiding_agent)
+    self.hiding_agent.updateState(open, walls, visibilityTable, self.clock)
     # get next action from agent and allow it to perform said action
     action = self.hiding_agent.getAction()
     self.hiding_agent.performAction(action)
@@ -111,9 +113,9 @@ class HideAndSeek:
     action and updates the game accordingly.
     '''
     # let agent perceive the environment and update belief state
-    open , walls = self.environment.perceiveEnv(self.seeking_agent)
+    open , walls , visibilityTable = self.environment.perceiveEnv(self.seeking_agent)
     hider_position = self.foundHider(open,walls,self.hiding_agent.position)
-    self.seeking_agent.updateState(open,walls,hider_position)
+    self.seeking_agent.updateState(open,walls,visibilityTable,hider_position)
     # get next action from agent and allow it to perform said action
     action = self.seeking_agent.getAction()
     self.seeking_agent.performAction(action)
@@ -182,7 +184,7 @@ class HideAndSeek:
 if __name__ == "__main__":
   
   # # test simulation
-  # game = HideAndSeek(300,4)
+  # game = HideAndSeek(50,3)
   # game.simulateGame()
 
   # test simulation

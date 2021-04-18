@@ -12,6 +12,29 @@ import time
 
 # Primary Export/Functionality
 ################################################################################
+# could make this faster by only looking at open tiles
+def visibilityTable(board,distance):
+  '''
+  Creates a table that stores the set of visible walls and open squares from
+  each position on the board. Does so by iterating over the entire board and
+  calling visibleTiles for each position. Output returned as a dictionary with
+  position tuples as the keys. Each dictionary item contains a tuple where the
+  first item is the set of visible open positions and the second is the walls.
+  NOTE - currently only looks at visibility of open squares
+  '''
+  # initialize table
+  visibility_table = {}
+  # iterate over board and store wall and open sets for all open squares
+  ( n , m ) = board.shape 
+  for i in range(n):
+    for j in range(m):
+      # only bother with positions that are not walls
+      if (not board[(i,j)]):
+        open , walls = visibleTiles((i,j),distance,board)
+        visibility_table[(i,j)] = ( open , walls )
+  # return table
+  return visibility_table
+
 def visibleTiles(position,distance,board):
   '''
   Returns two sets, one containing all the open positons within the given

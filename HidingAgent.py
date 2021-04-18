@@ -32,21 +32,21 @@ class HidingAgent(Agent):
     # store game clock assumed to be 0 at first
     self.game_clock = 0
 
-  def updateState(self, open_squares, wall_squares, game_clock):
+  def updateState(self, open_squares, wall_squares, visibilityTable, game_clock):
     '''
     This function allows the agent to update its belief state of the environment
     based off the percepts it receives.
     '''
     # call super to update environment based off visible squares
-    super().updateState(open_squares, wall_squares)
+    super().updateState(open_squares, wall_squares, visibilityTable)
     # update game clock
     self.game_clock = game_clock
 
-  def resetState(self, start_position):
+  def resetState(self):
     '''
     Resets the agent's belief state back to its original state.
     '''
-    super().resetState(start_position)
+    super().resetState()
     self.game_clock = 0
 
   def getAction(self):
