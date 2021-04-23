@@ -120,7 +120,7 @@ class HideAndSeek:
     # update game clock
     self.tickClock()
 
-  def simulateGame(self):
+  def simulateGame(self, print_updates):
     '''
     This function simulates an entire game of Hide & Seek.
     '''
@@ -130,7 +130,8 @@ class HideAndSeek:
     # hiding segment of game
     for i in range(self.hiding_time):
       self.hidingStep()
-      print("Step {} Hiding Agent Pos: {}".format(self.clock,self.hiding_agent.position))
+      if (print_updates):
+        print("Step {} Hiding Agent Pos: {}".format(self.clock,self.hiding_agent.position))
 
     # reset clock
     self.resetClock()
@@ -138,13 +139,14 @@ class HideAndSeek:
     # seeking segment of game
     while (self.seeking_agent.position != self.hiding_agent.position):
       self.seekingStep()
-      print("Step {} Seeking Agent Pos: {}".format(self.clock,self.seeking_agent.position))
+      if (print_updates):
+        print("Step {} Seeking Agent Pos: {}".format(self.clock,self.seeking_agent.position))
 
     # print end message
     print("Finished Hide & Seek Simulation")
     print("Seeker Time: {}".format(self.clock))
 
-  def visualizeGame(self):
+  def visualizeGame(self, print_updates):
     '''
     This function simulates and visualizes an entire game of Hide & Seek.
     '''
@@ -158,7 +160,11 @@ class HideAndSeek:
     for i in range(self.hiding_time):
       self.hidingStep()
       visualization.moveHider()
-      print("Step {} Hiding Agent Pos: {}".format(self.clock,self.hiding_agent.position))
+      if (print_updates):
+        print(
+          "Step {} Hiding Agent Pos: {}  ,  Current Score = {:.3f}  ,  Best Score = {:.3f}"
+          .format(self.clock,self.hiding_agent.position,self.hiding_agent.current_score,self.hiding_agent.best_score)
+        )
 
     # reset clock
     self.resetClock()
@@ -167,7 +173,8 @@ class HideAndSeek:
     while (self.seeking_agent.position != self.hiding_agent.position):
       self.seekingStep()
       visualization.moveSeeker()
-      print("Step {} Seeking Agent Pos: {}".format(self.clock,self.seeking_agent.position))
+      if (print_updates):
+        print("Step {} Seeking Agent Pos: {}".format(self.clock,self.seeking_agent.position))
 
     # print end message
     print("Finished Hide & Seek Simulation")
@@ -193,6 +200,10 @@ if __name__ == "__main__":
   ##########################
   sleep_time = 0
   ##########################
+  # SIMULATION PARAMETERS
+  ##########################
+  print_updates = True
+  ##########################
 
 
   # Environment
@@ -201,7 +212,7 @@ if __name__ == "__main__":
   middle_pos = environment.getMiddlePos()
 
   # Agents
-  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range)
+  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range,hiding_time)
   seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range)
   
   # create Hide & Seek Game
@@ -210,10 +221,10 @@ if __name__ == "__main__":
     hiding_time,sleep_time
   )
 
-  # # simulate game
-  # game.simulateGame()
+  # simulate game
+  game.simulateGame(print_updates)
 
-  # visualize game
-  game.visualizeGame()
+  # # visualize game
+  # game.visualizeGame(print_updates)
   
     
