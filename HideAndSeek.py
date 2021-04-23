@@ -34,19 +34,18 @@ class HideAndSeek:
   Within this class are the various methods for each of the parts of the game.
   '''
 
-  def __init__(self, hiding_time, vision_range):
+  def __init__(self, environment, hiding_agent, seeking_agent, hiding_time, sleep_time):
     '''
     Initializes new Hiding Agent instance.
     '''
-    # save the input parameters (used when resetting elements)
+    # save environment
+    self.environment = environment
+    # save agents
+    self.hiding_agent = hiding_agent
+    self.seeking_agent = seeking_agent
+    # save other parameters
     self.hiding_time = hiding_time
-    self.vision_range = vision_range
-    # set the environment and agents for the game
-    self.environment = Environment(vision_range)
-    self.start_position = self.environment.getMiddlePos()
-    self.env_shape = self.environment.board.shape
-    self.hiding_agent = HidingAgent(self.env_shape, self.start_position, vision_range)
-    self.seeking_agent = SeekingAgent(self.env_shape, self.start_position, vision_range)
+    self.sleep_time = sleep_time
     # initialize internal clock for the game
     self.clock = 0
 
@@ -68,15 +67,14 @@ class HideAndSeek:
     '''
     self.hiding_agent.resetState()
     self.seeking_agent.resetState()
+    self.resetClock()
 
   def resetEnv(self):
     '''
     Creates a new environment for the game and resets agents for said
     environment.
     '''
-    self.environment = Environment(self.vision_range)
-    self.start_position = self.environment.getMiddlePos()
-    self.env_shape = self.environment.board.shape
+    self.environment.resetEnv()
     self.resetAgents()
 
   def foundHider(self,open_set,wall_set,hider_position):
@@ -154,7 +152,7 @@ class HideAndSeek:
     print("Starting Hide & Seek Simulation")
 
     # initialize visualization
-    visualization = Visualization(self.environment, self.hiding_agent, self.seeking_agent)
+    visualization = Visualization(self.environment, self.hiding_agent, self.seeking_agent, self.sleep_time)
 
     # hiding segment of game
     for i in range(self.hiding_time):
@@ -182,13 +180,40 @@ class HideAndSeek:
 # Unit Tests
 ################################################################################
 if __name__ == "__main__":
+
+  ##########################
+  # SIMULATION PARAMETERS
+  ##########################
+  hiding_time = 100
+  vision_range = 3
+  hiding_alg = "rhc"
+  seeking_alg = "rhc"
+  ##########################
+  # VISUALIZATION PARAMETERS
+  ##########################
+  sleep_time = 0
+  ##########################
+
+
+  # Environment
+  environment = Environment(vision_range)
+  env_shape = environment.board.shape
+  middle_pos = environment.getMiddlePos()
+
+  # Agents
+  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range)
+  seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range)
   
-  # # test simulation
-  # game = HideAndSeek(50,3)
+  # create Hide & Seek Game
+  game = HideAndSeek(
+    environment,hiding_agent,seeking_agent,
+    hiding_time,sleep_time
+  )
+
+  # # simulate game
   # game.simulateGame()
 
-  # test simulation
-  game = HideAndSeek(50,3)
+  # visualize game
   game.visualizeGame()
   
     

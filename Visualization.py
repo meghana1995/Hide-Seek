@@ -22,7 +22,6 @@ import board_generator
 ################################################################################
 square_size = 20
 squeeze_ratio = square_size / 24
-sleep_time = 0
 
 
 # Primary Export/Functionality
@@ -35,7 +34,7 @@ class Visualization:
   Within this class are the various methods for each of the parts of the game.
   '''
 
-  def __init__(self, environment, hiding_agent, seeking_agent):
+  def __init__(self, environment, hiding_agent, seeking_agent, sleep_time):
     '''
     Initializes new Hiding Agent instance.
     '''
@@ -43,6 +42,9 @@ class Visualization:
     self.environment = environment
     self.hiding_agent = hiding_agent
     self.seeking_agent = seeking_agent
+
+    # save other parameters
+    self.sleep_time = sleep_time
 
     # initialize visualization screen
     self.middle_position = self.environment.getMiddlePos()
@@ -79,9 +81,11 @@ class Visualization:
 
   def moveHider(self):
     self.hider.move(self.index2Position(self.hiding_agent.position[0],self.hiding_agent.position[1]))
+    time.sleep(self.sleep_time)
 
   def moveSeeker(self):
     self.seeker.move(self.index2Position(self.seeking_agent.position[0],self.seeking_agent.position[1]))
+    time.sleep(self.sleep_time)
 
   def index2Position(self,i,j):
     middle_pos = self.environment.getMiddlePos()
@@ -115,7 +119,6 @@ class Hider(turtle.Turtle):
         self.penup()
     def move(self, position):
       self.goto(position[0],position[1])
-      time.sleep(sleep_time)
 
 # class for the sprite turtle (red turtle)
 class Seeker(turtle.Turtle):
@@ -128,6 +131,5 @@ class Seeker(turtle.Turtle):
         self.penup()
     def move(self, position):
       self.goto(position[0],position[1])
-      time.sleep(sleep_time)
   
     

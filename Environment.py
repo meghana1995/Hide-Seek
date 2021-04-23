@@ -17,10 +17,10 @@ import visible_squares
 
 # Parameters for Board
 ################################################################################
-radius = 10
+radius = 20
 square_size = 7
 seed = 1
-#seed = math.floor(np.random.rand()*456132545)
+#seed = math.floor(np.random.rand()*4568132545)
 simplex_cutoffs = ( .67 , .67 )
 simplex_scales = ( 10 , 5 )
 opening_width = 3
@@ -42,12 +42,24 @@ class Environment:
     '''
     Initializes new Environment instance.
     '''
+    # store distance
+    self.distance = distance
     # board indicating walls in the environment
     self.board = board_generator.generateBoard(
       radius, seed, simplex_cutoffs, simplex_scales, opening_width, second_pass
     )
     # matrix of sets that represent the squares visible from each position
     self.visibility_table = visible_squares.visibilityTable(self.board,distance)
+
+  def resetEnv(self):
+    seed = math.floor(np.random.rand()*4568132545)
+    # board indicating walls in the environment
+    self.board = board_generator.generateBoard(
+      radius, seed, simplex_cutoffs, simplex_scales, opening_width, second_pass
+    )
+    # matrix of sets that represent the squares visible from each position
+    self.visibility_table = visible_squares.visibilityTable(self.board,self.distance)
+
 
   def getMiddlePos(self):
     '''

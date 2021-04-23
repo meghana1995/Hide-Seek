@@ -23,12 +23,12 @@ class HidingAgent(Agent):
   Class for representing our Hiding Agent in the game of Hide & Seek.
   '''
 
-  def __init__(self, env_shape, start_pos, vision_range):
+  def __init__(self, algorithm, env_shape, start_pos, vision_range):
     '''
     Initializes new Hiding Agent instance.
     '''
     # call to super
-    super().__init__(env_shape, start_pos, vision_range)
+    super().__init__(algorithm, env_shape, start_pos, vision_range)
     # store game clock assumed to be 0 at first
     self.game_clock = 0
 
@@ -54,8 +54,17 @@ class HidingAgent(Agent):
     This funciton represents the Hiding Agent determining what action to carry
     out next while trying to find its hiding place.
     '''
-    # for now just returns a random valid acton
-    return self.randomAction()
+    # pick appropriate action using agent's choice of algorithm
+    if (self.algorithm == "dfs"):
+      return self.dFS()
+    elif (self.algorithm == "hc"):
+      return self.hC()
+    elif (self.algorithm == "ihc"):
+      return self.improvedHC()
+    elif (self.algorithm == "rhc"):
+      return self.randomHC()
+    else:
+      return self.randomAction()
 
 
 # Unit Tests
