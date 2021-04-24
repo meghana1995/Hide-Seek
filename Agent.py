@@ -55,7 +55,7 @@ class Agent:
   be extended to create both our Hiding and Seeking Agents.
   '''
 
-  def __init__(self, algorithm, env_shape, start_pos, vision_range):
+  def __init__(self, algorithm, env_shape, start_pos, vision_range, h_weights):
     '''
     Initializes new Agent instance.
     '''
@@ -69,8 +69,10 @@ class Agent:
     self.start_position = start_pos
     self.position = start_pos
     self.environment[start_pos[0]][start_pos[1]] = 0
-    # initialize agent's vision range
+    # store agent's vision range
     self.vision_range = vision_range
+    # store weights for heuristic function
+    self.h_weights = h_weights
     # initialize agent's plan as None
     self.plan = None
     # initialize set of positions visited by the agent
@@ -329,16 +331,12 @@ class Agent:
     Hueristic function used by agents to estimate the hideability value of a
     given tile, based off currently know knowledge.
     '''
-    # weights for combining the scores
-    h_weight = .5
-    v_weight = 0
-    d_weight = .5
     # grab scores
-    h_score = self.hidabilityScore(position)
-    v_score = self.visibilityScore(position)
-    d_score = self.distanceScore(position)
+    h_score = self.hidabilityScore(position)  * self.h_weights[0]
+    v_score = self.visibilityScore(position)  * self.h_weights[1]
+    d_score = self.distanceScore(position)    * self.h_weights[2]
     # get combined score
-    return h_weight*h_score + v_weight*v_score + d_weight*d_score
+    return h_score + v_score + d_score
 
   def hidabilityScore(self,position):
     '''

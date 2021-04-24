@@ -23,12 +23,12 @@ class SeekingAgent(Agent):
   Class for representing our Seeking Agent in the game of Hide & Seek.
   '''
 
-  def __init__(self, algorithm, env_shape, start_pos, vision_range):
+  def __init__(self, algorithm, env_shape, start_pos, vision_range, h_weights):
     '''
     Initializes new Seeking Agent instance.
     '''
     # call to super
-    super().__init__(algorithm, env_shape, start_pos, vision_range)
+    super().__init__(algorithm, env_shape, start_pos, vision_range, h_weights)
     # store position of hider (None until hider perceived)
     self.hider_position = None
 

@@ -20,7 +20,7 @@ import board_generator
 
 # Parameters for Visualization
 ################################################################################
-square_size = 20
+square_size = 15
 squeeze_ratio = square_size / 24
 
 
