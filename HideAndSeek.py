@@ -191,8 +191,9 @@ if __name__ == "__main__":
   ##########################
   # SIMULATION PARAMETERS
   ##########################
-  hiding_time = 100
+  hiding_time = 400
   vision_range = 3
+  print_updates = True
   hiding_alg = "rhc"
   seeking_alg = "rhc"
   ##########################
@@ -200,9 +201,14 @@ if __name__ == "__main__":
   ##########################
   sleep_time = 0
   ##########################
-  # SIMULATION PARAMETERS
+  # AGENT PARAMETERS
   ##########################
-  print_updates = True
+  # hiding agent
+  hiding_alg = "rhc"
+  hider_weights = (1/3,0,2/3)
+  # seeking agent
+  seeking_alg = "rhc"
+  seeker_weights = (0,2/3,1/3)
   ##########################
 
 
@@ -212,8 +218,8 @@ if __name__ == "__main__":
   middle_pos = environment.getMiddlePos()
 
   # Agents
-  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range,hiding_time)
-  seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range)
+  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range,hider_weights,hiding_time)
+  seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range,seeker_weights)
   
   # create Hide & Seek Game
   game = HideAndSeek(
@@ -221,10 +227,10 @@ if __name__ == "__main__":
     hiding_time,sleep_time
   )
 
-  # simulate game
-  game.simulateGame(print_updates)
+  # # simulate game
+  # game.simulateGame(print_updates)
 
-  # # visualize game
-  # game.visualizeGame(print_updates)
+  # visualize game
+  game.visualizeGame(print_updates)
   
     

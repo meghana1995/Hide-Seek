@@ -23,12 +23,12 @@ class HidingAgent(Agent):
   Class for representing our Hiding Agent in the game of Hide & Seek.
   '''
 
-  def __init__(self, algorithm, env_shape, start_pos, vision_range, hiding_time):
+  def __init__(self, algorithm, env_shape, start_pos, vision_range, h_weights, hiding_time):
     '''
     Initializes new Hiding Agent instance.
     '''
     # call to super
-    super().__init__(algorithm, env_shape, start_pos, vision_range)
+    super().__init__(algorithm, env_shape, start_pos, vision_range, h_weights)
     # store hiding_time and time left on clock for finding hiding place
     self.hiding_time = hiding_time
     self.time_left = hiding_time

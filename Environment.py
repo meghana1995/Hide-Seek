@@ -17,14 +17,29 @@ import visible_squares
 
 # Parameters for Board
 ################################################################################
-radius = 20
+
+# Good radius = 25 setup
+########################
+radius = 25
 square_size = 7
-seed = 1
-#seed = math.floor(np.random.rand()*4568132545)
+#seed = 1
+seed = math.floor(np.random.rand()*4568132545)
 simplex_cutoffs = ( .67 , .67 )
-simplex_scales = ( 10 , 5 )
+simplex_scales = ( 7 , 3.5 )
 opening_width = 3
 second_pass = True
+
+
+# # Good radius = 50 setup
+##########################
+# radius = 50
+# square_size = 7
+# #seed = 1
+# seed = math.floor(np.random.rand()*4568132545)
+# simplex_cutoffs = ( .67 , .67 )
+# simplex_scales = ( 10 , 5 )
+# opening_width = 3
+# second_pass = True
 
 
 # Primary Export/Functionality
@@ -48,6 +63,7 @@ class Environment:
     self.board = board_generator.generateBoard(
       radius, seed, simplex_cutoffs, simplex_scales, opening_width, second_pass
     )
+    print(self.board.shape)
     # matrix of sets that represent the squares visible from each position
     self.visibility_table = visible_squares.visibilityTable(self.board,distance)
 
