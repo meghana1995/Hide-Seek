@@ -12,6 +12,7 @@ from visible_squares import visibilityTable
 from Visualization import Visualization
 import numpy as np
 import math
+import time
 
 # local files
 from Environment import Environment
@@ -125,7 +126,8 @@ class HideAndSeek:
     This function simulates an entire game of Hide & Seek.
     '''
     # print start message
-    print("Starting Hide & Seek Simulation")
+    if (print_updates):
+      print("Starting Hide & Seek Simulation")
 
     # hiding segment of game
     for i in range(self.hiding_time):
@@ -143,15 +145,20 @@ class HideAndSeek:
         print("Step {} Seeking Agent Pos: {}".format(self.clock,self.seeking_agent.position))
 
     # print end message
-    print("Finished Hide & Seek Simulation")
-    print("Seeker Time: {}".format(self.clock))
+      if (print_updates):
+        print("Finished Hide & Seek Simulation")
+        print("Seeker Time: {}".format(self.clock))
+
+    # return total elapsed time
+    return self.clock
 
   def visualizeGame(self, print_updates):
     '''
     This function simulates and visualizes an entire game of Hide & Seek.
     '''
     # print start message
-    print("Starting Hide & Seek Simulation")
+    if (print_updates):
+      print("Starting Hide & Seek Simulation")
 
     # initialize visualization
     visualization = Visualization(self.environment, self.hiding_agent, self.seeking_agent, self.sleep_time)
@@ -177,11 +184,15 @@ class HideAndSeek:
         print("Step {} Seeking Agent Pos: {}".format(self.clock,self.seeking_agent.position))
 
     # print end message
-    print("Finished Hide & Seek Simulation")
-    print("Seeker Time: {}".format(self.clock))
+    if (print_updates):
+      print("Finished Hide & Seek Simulation")
+      print("Seeker Time: {}".format(self.clock))
 
     # end visualization
     visualization.endVis()
+
+    # return total elapsed time
+    return self.clock
 
 
 # Unit Tests
@@ -193,9 +204,9 @@ if __name__ == "__main__":
   ##########################
   hiding_time = 400
   vision_range = 3
-  print_updates = True
+  print_updates = False
   hiding_alg = "rhc"
-  seeking_alg = "rhc"
+  seeking_alg = "dFS"
   ##########################
   # VISUALIZATION PARAMETERS
   ##########################
@@ -208,7 +219,7 @@ if __name__ == "__main__":
   hider_weights = (1/3,0,2/3)
   # seeking agent
   seeking_alg = "rhc"
-  seeker_weights = (0,2/3,1/3)
+  seeker_weights = (1/2,0,1/2)
   ##########################
 
 
@@ -227,10 +238,31 @@ if __name__ == "__main__":
     hiding_time,sleep_time
   )
 
-  # # simulate game
-  # game.simulateGame(print_updates)
+  
+  # simulate game
+  game.simulateGame(print_updates)
 
-  # visualize game
-  game.visualizeGame(print_updates)
+  # # visualize game
+  # game.visualizeGame(print_updates)
+
+  # # time 1000 simulations using the same board
+  # N = 10
+  # M = 10
+  # n = M*N
+  # total_time = 0
+  # print("Timing n={} Iterations of Hide & Seek Game".format(n))
+  # print("Using M={} Different Environments".format(M))
+  # print("With N={} Simulations per Environment".format(N))
+  # t0 = time.time()
+  # for i in range(M):
+  #   for j in range(N):
+  #     total_time += game.simulateGame(print_updates)
+  #     game.resetAgents()
+  #   game.resetEnv()
+  # t1 = time.time()
+  # print("Elapsed Time: {}".format(t1-t0))
+  # print("Average Sim. Time: {}".format((t1-t0)/n))
+  # print("Average Seeker Time: {}".format(total_time/n))
+
   
     

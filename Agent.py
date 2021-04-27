@@ -202,12 +202,17 @@ class Agent:
     while (len(queue) > 0):
       # pop off shortest path and add to vistited
       current = heapq.heappop(queue)[2]
-      visited.add(current["position"])
+      # skip to next item on queue if this position has been visited
+      if (current["position"] in visited):
+        continue
+      # else add to list of visited
+      else:
+        visited.add(current["position"])
       # if we reached the goal, then return its path
       if (current["position"] == goal):
         return current["path"]
       # extend path to each of this positions neighbors
-      for action, change in ALLOWED_ACTIONS.items():
+      for action, change in MOVE_ACTIONS.items():
         # get new position for action
         new_position = ( 
           current["position"][0] + change[0],

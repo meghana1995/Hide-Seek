@@ -63,7 +63,6 @@ class Environment:
     self.board = board_generator.generateBoard(
       radius, seed, simplex_cutoffs, simplex_scales, opening_width, second_pass
     )
-    print(self.board.shape)
     # matrix of sets that represent the squares visible from each position
     self.visibility_table = visible_squares.visibilityTable(self.board,distance)
 
