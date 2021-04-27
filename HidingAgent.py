@@ -80,17 +80,12 @@ class HidingAgent(Agent):
     else:
       # recalculate path to best position if time running out
       if (len(self.path_to_best)+self.moves_since_best+1 > self.time_left-1):
-        print("Recalculating Path To Hiding Place")
         self.path_to_best = self.aStar(self.best_hiding_place)
-        print(self.path_to_best)
         self.moves_since_best = 0
       # check if we need to start following path back to hiding place
       if (len(self.path_to_best)+1 > self.time_left-1):
         self.hiding = True    
-    
-    print("Time Left: {}".format(self.time_left))
-    print("Path Length: {}".format(len(self.path_to_best)))
-    print("Moves Made: {}".format(self.moves_since_best))
+
 
   def performAction(self, action):
     '''
