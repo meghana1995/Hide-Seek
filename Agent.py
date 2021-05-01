@@ -55,7 +55,7 @@ class Agent:
   be extended to create both our Hiding and Seeking Agents.
   '''
 
-  def __init__(self, algorithm, env_shape, start_pos, vision_range, h_weights):
+  def __init__(self, algorithm, env_shape, start_pos, vision_range, h_weights, randomness):
     '''
     Initializes new Agent instance.
     '''
@@ -79,6 +79,8 @@ class Agent:
     self.visited_positions = set([start_pos])
     # initialize past moves (used for backtracking)
     self.current_path = []
+    # store randomness of the agent
+    self.randomness = randomness
 
   def resetState(self):
     '''
@@ -261,8 +263,8 @@ class Agent:
 
   def hC(self):
     '''
-    Uses online version of DFS with backtracking to allow agent to wander
-    randomly around the board.
+    Uses hill climbing to make agent always move to best adjacent position
+    according to the hideability score.
     '''
     # init best action for storing valid actions
     best_action = None
@@ -283,8 +285,9 @@ class Agent:
 
   def improvedHC(self):
     '''
-    Uses online version of DFS with backtracking to allow agent to wander
-    randomly around the board.
+    Improved version of hill climbing that prevents the agent from revisiting
+    positions unless it is backtracking to explore new areas. Basically
+    DFS combined with Hill Climbing.
     '''
     # init best action for storing valid actions
     best_action = None
@@ -302,14 +305,19 @@ class Agent:
           best_action = action
     # if no valid actions then backtrack, else pick highest value action
     if (best_action == None):
-      return INVERSE_ACTIONS[self.current_path[-1]]
+      if (len(self.current_path) > 0):
+        return INVERSE_ACTIONS[self.current_path[-1]]
+      # this means board has been fully explored, so do nothing
+      else:
+        return "nothing"
     else:
       return best_action
 
   def randomHC(self):
     '''
-    Uses online version of DFS with backtracking to allow agent to wander
-    randomly around the board.
+    Same as Improved Hill Climbing but randomly selected next action
+    probabilistically. Actions with a higher probability score have a higher
+    chance of being selected.
     '''
     # init lists for storing valid actions and scores
     valid_actions = []
@@ -326,9 +334,48 @@ class Agent:
         action_scores.append(hideability)
     # if no valid actions then backtrack, else pick random action based on scores
     if (len(valid_actions) == 0):
-      return INVERSE_ACTIONS[self.current_path[-1]]
+      if (len(self.current_path) > 0):
+        return INVERSE_ACTIONS[self.current_path[-1]]
+      # this means board has been fully explored, so do nothing
+      else:
+        return "nothing"
     else:
       action_probs = helper_util.normalize(action_scores)
+      return np.random.choice(valid_actions,p=action_probs)
+
+  def weightedHC(self):
+    '''
+    Same as Random Hill Climbing but the agent has a parameter that determines
+    the relative weighting of action probabilities based on their hideability
+    scores. In other words, the agent has a parameter with value in range [0,1]
+    that determines how random the hill climbing is. If 0, then the agent
+    always picks the best action, and if 1 then the agent chooses the action
+    randomly assuming a uniform distribution between them. If between these
+    values, then distribution is weighted so the better action is more probable,
+    with this weighting being stronger as the value gets closer to 0.
+    '''
+    # init lists for storing valid actions and scores
+    valid_actions = []
+    action_scores = []
+    # iterate over actions and test if it results in valid position
+    for action, change in MOVE_ACTIONS.items():
+      new_position = ( 
+        self.position[0] + change[0],
+        self.position[1] + change[1],
+      )
+      if (self.environment[new_position] == 0 and new_position not in self.visited_positions):
+        hideability = self.hidabilityScore(new_position)
+        valid_actions.append(action)
+        action_scores.append(hideability)
+    # if no valid actions then backtrack, else pick random action based on scores
+    if (len(valid_actions) == 0):
+      if (len(self.current_path) > 0):
+        return INVERSE_ACTIONS[self.current_path[-1]]
+      # this means board has been fully explored, so do nothing
+      else:
+        return "nothing"
+    else:
+      action_probs = helper_util.weightedNormalize(action_scores,self.randomness)
       return np.random.choice(valid_actions,p=action_probs)
 
   def hideability(self, position):
