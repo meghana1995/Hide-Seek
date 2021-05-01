@@ -41,7 +41,9 @@ def weightedNormalize(values,r):
   '''
   p = np.array(values)
   m = p.max()
-  if (r == 0):
+  if (m == 0):
+    p = np.full(p.shape,1/p.shape[0])
+  elif (r == 0):
     p = np.where(p < m, 0, 1)
   else:
     w = 1/r - 1

@@ -8,8 +8,6 @@ Created on Apr 14, 2021
 ################################################################################
 
 # python packages
-from visible_squares import visibilityTable
-from Visualization import Visualization
 import numpy as np
 import math
 import time
@@ -18,7 +16,7 @@ import time
 from Environment import Environment
 from HidingAgent import HidingAgent
 from SeekingAgent import SeekingAgent
-# from Visualization import Visualization
+from Visualization import Visualization
 
 
 # Constants
@@ -121,7 +119,7 @@ class HideAndSeek:
     # update game clock
     self.tickClock()
 
-  def simulateGame(self, print_updates):
+  def simulateGame(self, print_updates=False):
     '''
     This function simulates an entire game of Hide & Seek.
     '''
@@ -152,7 +150,7 @@ class HideAndSeek:
     # return total elapsed time
     return self.clock
 
-  def visualizeGame(self, print_updates):
+  def visualizeGame(self, print_updates=False):
     '''
     This function simulates and visualizes an entire game of Hide & Seek.
     '''
@@ -205,8 +203,6 @@ if __name__ == "__main__":
   hiding_time = 400
   vision_range = 3
   print_updates = False
-  hiding_alg = "rhc"
-  seeking_alg = "dFS"
   ##########################
   # VISUALIZATION PARAMETERS
   ##########################
@@ -215,11 +211,13 @@ if __name__ == "__main__":
   # AGENT PARAMETERS
   ##########################
   # hiding agent
-  hiding_alg = "rhc"
+  hiding_alg = "whc"
   hider_weights = (1/3,0,2/3)
+  h_randomness = .5
   # seeking agent
-  seeking_alg = "rhc"
+  seeking_alg = "whc"
   seeker_weights = (1/2,0,1/2)
+  s_randomness = .5
   ##########################
 
 
@@ -229,8 +227,8 @@ if __name__ == "__main__":
   middle_pos = environment.getMiddlePos()
 
   # Agents
-  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range,hider_weights,hiding_time)
-  seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range,seeker_weights)
+  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range,hider_weights,h_randomness,hiding_time)
+  seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range,seeker_weights,s_randomness)
   
   # create Hide & Seek Game
   game = HideAndSeek(
@@ -239,11 +237,11 @@ if __name__ == "__main__":
   )
 
   
-  # simulate game
-  game.simulateGame(print_updates)
+  # # simulate game
+  # game.simulateGame(print_updates)
 
-  # # visualize game
-  # game.visualizeGame(print_updates)
+  # visualize game
+  game.visualizeGame(print_updates)
 
   # # time 1000 simulations using the same board
   # N = 10
