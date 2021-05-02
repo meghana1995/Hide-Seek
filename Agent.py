@@ -88,6 +88,7 @@ class Agent:
     '''
     self.environment.fill(-1)
     self.environment[self.start_position] = 0
+    self.visibility_table = {}
     self.position = self.start_position
     self.plan = None
     self.visited_positions = set([self.start_position])
