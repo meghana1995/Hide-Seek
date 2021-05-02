@@ -17,6 +17,211 @@ import time
 
 
 
+# Reinforcement Learning Agent
+################################################################################
+class RLAgent:
+  '''
+  Class for representing our Seeking Agent that uses Convolutional Neural
+  Network Model to seach for the Hiding Agent during a game of Hide & Seek.
+  This model includes methods for training the model using simulations of the
+  Hide and Seek game and Reinforcement Learning for encouraging optimal search
+  behaviors.
+  '''
+
+  def __init__(self, env_shape, start_pos, vision_range, model_path=None):
+    '''
+    Initializes new RL Seeking Agent instance. If model_path is given, then the
+    agent is initialized using the saved model in the directory specified by the
+    model_path. Otherwise, a new untrained model is used.
+    '''
+    # store the inputs since they may be used later (such as resetting the agent)
+    self.env_shape = env_shape
+    self.start_position = start_pos
+    self.vision_range = vision_range
+
+    # initialize the state of the agents memory by doing a resetState call
+    self.resetState()
+
+    # initialize the neural network model for the agent or load saved modal
+    if (model_path != None):
+      self.model = createModel()
+    else:
+      self.model = createModel()
+    
+
+    # store initial position of the seeker
+    self.position = start_pos
+
+    # store position of hider (None until hider perceived)
+    self.hider_position = None
+
+    # initialize agent's internal state of the environment
+    # this is used for determining actions and stores 2 matrices:
+    #  1) What the agent has observed in each position (-1 == unknown , 0 == open , 1 == wall , 2 == Agent)   # May need to change this
+    #  2) Estimate of # of tiles visible from each position (0-24)
+    self.env_shape
+    self.initAgentState(env_shape)
+
+    # initialize the agent's belief state of the environment as unknown
+    # -1 == unknown , 0 == open , 1 == wall
+    self.environment = np.full(env_shape, -1, np.int)
+    self.visibility_table = {}
+    # initialize agent's start position and label it as open
+    self.start_position = start_pos
+    self.position = start_pos
+    self.environment[start_pos[0]][start_pos[1]] = 0
+    # store agent's vision range
+    self.vision_range = vision_range
+    # store weights for heuristic function
+    self.h_weights = h_weights
+    # initialize agent's plan as None
+    self.plan = None
+    # initialize set of positions visited by the agent
+    self.visited_positions = set([start_pos])
+    # initialize past moves (used for backtracking)
+    self.current_path = []
+    # store randomness of the agent
+    self.randomness = randomness
+
+  def resetState(self):
+    '''
+    Initializes or resets the agent's memory state back to its original state.
+    This sets all the data structures and values the agent needs to model its
+    environment and determine next actions.
+    '''
+    # set initial position of the seeker
+    self.position = self.start_position
+
+    # set initial position of hider (None until hider perceived)
+    self.hider_position = None
+
+    # set plan agent stores for getting to hider (None until hider perceived)
+    self.plan = None
+
+    # set agents understanding of what it has percieved in the environment
+    # empty visibility table storing open positions visible from open position
+    
+
+
+    self.environment.fill(-1)
+    self.environment[self.start_position] = 0
+    self.position = self.start_position
+    self.plan = None
+    self.visited_positions = set([self.start_position])
+    self.current_path = []
+    self.hider_position = None
+
+
+  def updateState(self, open_squares, wall_squares, visibilityTable, hider_position):
+    '''
+    This function allows the agent to update its belief state of the environment
+    based off the percepts it receives.
+    '''
+    # call super to update environment based off visible squares
+    super().updateState(open_squares, wall_squares, visibilityTable)
+    # update game clock
+    self.hider_position = hider_position
+
+  def getAction(self):
+    '''
+    This funciton represents the Seeking Agent determining what action to carry
+    out next while trying to find the Hiding Agent.
+    '''
+    # if agent has plan then follow this plan
+    if (self.plan is not None):
+      return self.plan.pop(0)
+    # else if hider position is know build a plan and execute first action
+    elif (self.hider_position is not None):
+      self.plan = self.aStar(self.hider_position)
+      return self.plan.pop(0)
+    # else CNN decides next action
+    else:
+      # TODO
+      # replace this with neural networks getAction
+      return "nothing"
+
+  def performAction(self, action):
+    '''
+    Makes the agent perform the given action and updates agent's internal
+    data accordingly.
+    '''
+    # calculate new position based off action
+    change = ALLOWED_ACTIONS[action]
+    new_position = ( 
+      self.position[0] + change[0],
+      self.position[1] + change[1],
+    )
+    # set agent position to new position if valid
+    if (self.environment[new_position] == 0):
+      self.position = new_position
+      self.visited_positions.add(new_position)
+      # consider action to be backtracking if it was inverse of last action
+      if (len(self.current_path)>0):
+        inverse_last_action = INVERSE_ACTIONS[self.current_path[-1]]
+      else:
+        inverse_last_action = "none"
+      if (action == inverse_last_action):
+        del self.current_path[-1]
+      else:
+        self.current_path.append(action)
+
+  def validAction(self,position,action):
+    '''
+    Checks if given action is valid. Action is said to be valid if the action
+    moves the agent into a square that is open.
+    '''
+    change = ALLOWED_ACTIONS[action]
+    new_position = ( 
+      position[0] + change[0],
+      position[1] + change[1],
+    )
+    return self.environment[new_position] == 0
+
+  def validActions(self):
+    '''
+    Checks each of the allowable actions and returns a list of those that
+    the agent is able to perform based off its current position in the
+    environment.
+    '''
+    # init list for storing valid actions
+    valid_actions = []
+    # iterate over actions and test if it results in valid position
+    for action, change in ALLOWED_ACTIONS.items():
+      new_position = ( 
+        self.position[0] + change[0],
+        self.position[1] + change[1],
+      )
+      if (self.environment[new_position] == 0):
+        valid_actions.append(action)
+    # return valid actions
+    return valid_actions
+
+  def updateVisTable(self, position, open_squares):
+    '''
+    Update the visibility table for the agent using the given set of
+    visbile open squares and the position to be updated.
+    '''
+    if (position in self.visibility_table):
+      self.visibility_table[position] = self.visibility_table[position].union(open_squares)
+    else:
+      self.visibility_table[position] = open_squares
+
+  def updateState(self, open_squares, wall_squares, visibilityTable):
+    '''
+    This function allows the agent to update its belief state of the environment
+    based off the open and wall squares it is able to perceive.
+    '''
+    # update visibility table for current position
+    self.updateVisTable(self.position, open_squares)
+    # update environment and visibility table for open squares
+    for square in open_squares:
+      self.environment[square] = 0
+      self.updateVisTable(square, visibilityTable[square])
+    # update environment for wall squares
+    for square in wall_squares:
+      self.environment[square] = 1
+
+
 
 # Convolutional Model for Seeker Agent
 ################################################################################
@@ -225,7 +430,7 @@ if __name__ == "__main__":
   ##############################################
   # Hyperparameters
   learning_rate = 1e-3
-  MAX_ITERS = 100 # increase the maximum to train longer
+  MAX_ITERS = 10 # increase the maximum to train longer
   batch_size = 10 # number of batches to run
 
   # Model, optimizer
