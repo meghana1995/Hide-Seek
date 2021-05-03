@@ -17,6 +17,7 @@ from Environment import Environment
 from HidingAgent import HidingAgent
 from SeekingAgent import SeekingAgent
 from Visualization import Visualization
+from RLAgentFeat import RLAgent, createModel
 
 
 # Constants
@@ -205,13 +206,13 @@ if __name__ == "__main__":
   ##########################
   # SIMULATION PARAMETERS
   ##########################
-  hiding_time = 400
+  hiding_time = 100
   vision_range = 3
   print_updates = False
   ##########################
   # VISUALIZATION PARAMETERS
   ##########################
-  sleep_time = 0
+  sleep_time = .01
   ##########################
   # AGENT PARAMETERS
   ##########################
@@ -231,9 +232,13 @@ if __name__ == "__main__":
   env_shape = environment.board.shape
   middle_pos = environment.getMiddlePos()
 
-  # Agents
+  # Hiding Agent
   hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range,hider_weights,h_randomness,hiding_time)
-  seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range,seeker_weights,s_randomness)
+
+  # Seeking Agent
+  # seeking_agent = SeekingAgent(seeking_alg,env_shape,middle_pos,vision_range,seeker_weights,s_randomness)
+  model = createModel()
+  seeking_agent = RLAgent(env_shape,middle_pos,vision_range, model)
   
   # create Hide & Seek Game
   game = HideAndSeek(

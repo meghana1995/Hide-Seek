@@ -70,7 +70,7 @@ class RLAgent:
     self.vision_range = vision_range
 
     # save model used by the agent
-    self.input_shape = [env_shape[0],env_shape[1],1]
+    self.input_shape = [env_shape[0],env_shape[1],3]
     self.model = model   
 
     # initialize the state of the agents memory by doing a resetState call
@@ -95,9 +95,13 @@ class RLAgent:
     # empty visibility table storing open positions visible from open position
     self.visibility_table = {}
     # build matrix storing types of tiles agent has observed at each positon
-    # 0 == unknown , 1 == open , 2 == wall , 3 == Agent (may need to change these)
+    # note that different axis are used for different ffeatures
+    #   Axis 0 - Known vs Unknown:  0 = Unknown   ,   1 = Known
+    #   Axis 1 - Open vs Wall:      0 = Open      ,   1 = Wall
+    #   Axis 2 - Seeker Position:   0 = No Seeker ,   1 = Seeker
     self.state = np.zeros(self.input_shape)
-    self.state[self.start_position][0] = 3
+    self.state[self.start_position][0] = 1
+    self.state[self.start_position][2] = 1
 
     # # below was when I wanted to also give the agent the visibility scores, but now I'm not doig that
     # # build matrix storing estimated visibility score for each position
@@ -126,7 +130,7 @@ class RLAgent:
     for position in open_squares:
       if self.state[position][0] == 0:
         new_positions += 1
-      self.state[position][0] = 1
+        self.state[position][0] = 1
       # self.updateVisTable(position, visibilityTable[position])
       # self.state[position][1] = self.visibility_table[position]
 
@@ -134,7 +138,8 @@ class RLAgent:
     for position in wall_squares:
       if self.state[position][0] == 0:
         new_positions += 1
-      self.state[position][0] = 2
+        self.state[position][0] = 1
+        self.state[position][1] = 1
 
     # return number of new positions observed
     return new_positions
@@ -180,9 +185,9 @@ class RLAgent:
       self.position[1] + change[1],
     )
     # set agent position to new position if valid
-    if (self.state[new_position][0] == 1):
-      self.state[self.position][0] = 1
-      self.state[new_position][0] = 3
+    if (self.state[new_position][1] == 0):
+      self.state[self.position][2] = 0
+      self.state[new_position][2] = 1
       self.position = new_position
 
   def validAction(self,position,action):
@@ -195,7 +200,7 @@ class RLAgent:
       position[0] + change[0],
       position[1] + change[1],
     )
-    return self.state[new_position][0] == 1
+    return self.state[new_position][1] == 0
 
   def validActions(self):
     '''
@@ -211,7 +216,7 @@ class RLAgent:
         self.position[0] + change[0],
         self.position[1] + change[1],
       )
-      if (self.state[new_position][0] == 1):
+      if (self.state[new_position][1] == 0):
         valid_actions.append(action)
     # return valid actions
     return valid_actions
@@ -282,7 +287,7 @@ class RLAgent:
           current["position"][1] + change[1],
         )
         # add position to queue if valid and not already visited
-        if (new_position not in visited and self.state[new_position][0] == 1):
+        if (new_position not in visited and self.state[new_position][1] == 0):
           # calculate g and h
           g = current["g"] + 1
           h = helper_util.ManhattanDist(new_position,goal)
@@ -310,8 +315,10 @@ class RLAgent:
 Embedding = tf.keras.layers.Embedding
 Conv2D = functools.partial(tf.keras.layers.Conv2D, padding='same', activation='relu')
 BatchNorm = tf.keras.layers.BatchNormalization
+MaxPool2D = tf.keras.layers.MaxPooling2D
 Flatten = tf.keras.layers.Flatten
 Dense = tf.keras.layers.Dense
+Dropout =  tf.keras.layers.Dropout
 
 def createModel():
   model = tf.keras.models.Sequential([
@@ -320,22 +327,24 @@ def createModel():
     # Embedding(3,2),
 
     # Convolutional layers
-    Conv2D(filters=32, kernel_size=5, strides=2),
+    Conv2D(32, (3,3)),
     BatchNorm(),
-    Conv2D(filters=48, kernel_size=5, strides=2),
+    Conv2D(32, (3,3)),
     BatchNorm(),
-    Conv2D(filters=64, kernel_size=3, strides=2),
+    MaxPool2D((2, 2)),
+    Conv2D(32, (3,3)),
     BatchNorm(),
-    Conv2D(filters=64, kernel_size=3, strides=2),
+    Conv2D(32, (3,3)),
     BatchNorm(),
+    MaxPool2D((2, 2)),
 
     # Flatten before dense layers
     Flatten(),
     
     # Fully connected layers
-    Dense(units=128, activation='relu'),
+    Dense(units=512, activation='relu'),
     BatchNorm(),
-    Dense(units=64, activation='relu'),
+    Dense(units=512, activation='relu'),
     BatchNorm(),
 
     # Output Layer
@@ -421,10 +430,16 @@ def discount_rewards(rewards, game_ended, gamma=0.99):
   return normalize(discounted_rewards)
 
 def rewardFunc(new_positions, hider_position):
-  reward = new_positions*.1 - 1
+  reward = new_positions*.5 - 1
   if (hider_position != None):
-    reward += 500
+    reward += 50
   return reward
+
+# def rewardFunc(new_positions, hider_position):
+#   if (hider_position != None):
+#     return 100
+#   else:
+#     return 0
 
 
 # Rollout Function
@@ -470,6 +485,7 @@ def collect_rollout(batch_size, game, model, choose_action, max_game_length=4000
 
     # grab current state of the seeker as current observation
     current_observation = game.seeking_agent.state.copy()
+    time.sleep(1)
 
     game_length = 0
     done = False
@@ -501,6 +517,7 @@ def collect_rollout(batch_size, game, model, choose_action, max_game_length=4000
 
       # update observation
       current_observation = game.seeking_agent.state.copy()
+      time.sleep(1)
     
     # Add the memory from this batch to the array of all Memory buffers
     memories.append(memory)

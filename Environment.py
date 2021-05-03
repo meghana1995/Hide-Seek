@@ -18,16 +18,38 @@ import visible_squares
 # Parameters for Board
 ################################################################################
 
-# Good radius = 25 setup
+# Good radius = 5 setup
 ########################
-radius = 25
+radius = 5
 square_size = 7
-#seed = 1
-seed = math.floor(np.random.rand()*4568132545)
+seed = 10
+# seed = math.floor(np.random.rand()*4568132545)
 simplex_cutoffs = ( .67 , .67 )
-simplex_scales = ( 7 , 3.5 )
-opening_width = 3
-second_pass = True
+simplex_scales = ( .5 , 3.5 )
+opening_width = 0
+second_pass = False
+
+# # Good radius = 10 setup
+# ########################
+# radius = 10
+# square_size = 7
+# seed = 38
+# # seed = math.floor(np.random.rand()*4568132545)
+# simplex_cutoffs = ( .67 , .67 )
+# simplex_scales = ( 7 , 3.5 )
+# opening_width = 3
+# second_pass = True
+
+# # Good radius = 25 setup
+# ########################
+# radius = 5
+# square_size = 7
+# seed = 38
+# # seed = math.floor(np.random.rand()*4568132545)
+# simplex_cutoffs = ( .67 , .67 )
+# simplex_scales = ( 7 , 3.5 )
+# opening_width = 3
+# second_pass = True
 
 
 # # Good radius = 50 setup
