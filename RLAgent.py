@@ -14,7 +14,38 @@ import functools
 import time
 
 # local files
+from Environment import Environment
+from HidingAgent import HidingAgent
+from HideAndSeek import HideAndSeek
 
+
+# Constants
+################################################################################
+
+# allowed actions
+ALLOWED_ACTIONS = {
+  "right":  (1,0),
+  "left":   (-1,0),
+  "up":     (0,1),
+  "down":   (0,-1),
+  "nothing": (0,0),
+}
+
+# movement actions 
+MOVE_ACTIONS = {
+  "right":  (1,0),
+  "left":   (-1,0),
+  "up":     (0,1),
+  "down":   (0,-1),
+}
+
+# movement actions 
+MOVE_ACTIONS_LIST = [
+  "right",
+  "left",
+  "up",
+  "down",
+]
 
 
 # Reinforcement Learning Agent
@@ -28,7 +59,7 @@ class RLAgent:
   behaviors.
   '''
 
-  def __init__(self, env_shape, start_pos, vision_range, model_path=None):
+  def __init__(self, env_shape, start_pos, vision_range, model):
     '''
     Initializes new RL Seeking Agent instance. If model_path is given, then the
     agent is initialized using the saved model in the directory specified by the
@@ -42,12 +73,8 @@ class RLAgent:
     # initialize the state of the agents memory by doing a resetState call
     self.resetState()
 
-    # initialize the neural network model for the agent or load saved modal
-    if (model_path != None):
-      self.model = createModel()
-    else:
-      self.model = createModel()
-    
+    # save model used by the agent
+    self.model = model    
 
     # store initial position of the seeker
     self.position = start_pos
@@ -57,31 +84,10 @@ class RLAgent:
 
     # initialize agent's internal state of the environment
     # this is used for determining actions and stores 2 matrices:
-    #  1) What the agent has observed in each position (-1 == unknown , 0 == open , 1 == wall , 2 == Agent)   # May need to change this
+    #  1) What the agent has observed in each position (0 == unknown , 1 == open , 2 == wall , 3 == Agent)   # May need to change this
     #  2) Estimate of # of tiles visible from each position (0-24)
     self.env_shape
     self.initAgentState(env_shape)
-
-    # initialize the agent's belief state of the environment as unknown
-    # -1 == unknown , 0 == open , 1 == wall
-    self.environment = np.full(env_shape, -1, np.int)
-    self.visibility_table = {}
-    # initialize agent's start position and label it as open
-    self.start_position = start_pos
-    self.position = start_pos
-    self.environment[start_pos[0]][start_pos[1]] = 0
-    # store agent's vision range
-    self.vision_range = vision_range
-    # store weights for heuristic function
-    self.h_weights = h_weights
-    # initialize agent's plan as None
-    self.plan = None
-    # initialize set of positions visited by the agent
-    self.visited_positions = set([start_pos])
-    # initialize past moves (used for backtracking)
-    self.current_path = []
-    # store randomness of the agent
-    self.randomness = randomness
 
   def resetState(self):
     '''
@@ -100,27 +106,62 @@ class RLAgent:
 
     # set agents understanding of what it has percieved in the environment
     # empty visibility table storing open positions visible from open position
-    
+    self.visibility_table = {}
+    # build matrix storing types of tiles agent has observed at each positon
+    # 0 == unknown , 1 == open , 2 == wall , 3 == Agent (may need to change these)
+    self.state = np.zeros(self.env_shape)
+    self.state[self.start_position] = 3
 
-
-    self.environment.fill(-1)
-    self.environment[self.start_position] = 0
-    self.position = self.start_position
-    self.plan = None
-    self.visited_positions = set([self.start_position])
-    self.current_path = []
-    self.hider_position = None
-
+    # # below was when I wanted to also give the agent the visibility scores, but now I'm not doig that
+    # # build matrix storing estimated visibility score for each position
+    # visibility = np.zeros(self.env_shape)
+    # # combine matrices into single tensor stored in agent
+    # self.state = np.stack([tiles,visibility],axis=-1)
 
   def updateState(self, open_squares, wall_squares, visibilityTable, hider_position):
     '''
-    This function allows the agent to update its belief state of the environment
-    based off the percepts it receives.
+    This function allows the agent to update its stored state of the environment
+    based off the percepts it receives. For the RL Agent, this function returns
+    the number of tiles previously not observed in order to determine a reward
+    for training.
     '''
-    # call super to update environment based off visible squares
-    super().updateState(open_squares, wall_squares, visibilityTable)
-    # update game clock
+    # update hider position
     self.hider_position = hider_position
+
+    # # update visibility table for current seeker position
+    # self.updateVisTable(self.position, open_squares)
+    # self.state[self.position][1] = self.visibility_table[self.position]
+
+    # init variable for counting newly observed positions
+    new_positions = 0
+
+    # update state for observed open squares
+    for position in open_squares:
+      if self.state[position] == 0:
+        new_positions += 1
+      self.state[position] = 1
+      # self.updateVisTable(position, visibilityTable[position])
+      # self.state[position][1] = self.visibility_table[position]
+
+    # update state for observed walls
+    for position in wall_squares:
+      if self.state[position] == 0:
+        new_positions += 1
+      self.state[position][0] = 2
+
+    # return number of new positions observed
+    return new_positions
+
+  # not used anymore, but keeping in case that changes
+  def updateVisTable(self, position, open_squares):
+    '''
+    Update the visibility table for the agent using the given set of
+    visbile open squares and the position to be updated.
+    '''
+    if (position in self.visibility_table):
+      self.visibility_table[position] = self.visibility_table[position].union(open_squares)
+    else:
+      self.visibility_table[position] = open_squares
 
   def getAction(self):
     '''
@@ -130,7 +171,7 @@ class RLAgent:
     # if agent has plan then follow this plan
     if (self.plan is not None):
       return self.plan.pop(0)
-    # else if hider position is know build a plan and execute first action
+    # else if hider position is known build a plan and execute first action
     elif (self.hider_position is not None):
       self.plan = self.aStar(self.hider_position)
       return self.plan.pop(0)
@@ -152,18 +193,10 @@ class RLAgent:
       self.position[1] + change[1],
     )
     # set agent position to new position if valid
-    if (self.environment[new_position] == 0):
+    if (self.state[new_position] == 1):
+      self.state[self.position] = 1
+      self.state[new_position] = 3
       self.position = new_position
-      self.visited_positions.add(new_position)
-      # consider action to be backtracking if it was inverse of last action
-      if (len(self.current_path)>0):
-        inverse_last_action = INVERSE_ACTIONS[self.current_path[-1]]
-      else:
-        inverse_last_action = "none"
-      if (action == inverse_last_action):
-        del self.current_path[-1]
-      else:
-        self.current_path.append(action)
 
   def validAction(self,position,action):
     '''
@@ -175,7 +208,7 @@ class RLAgent:
       position[0] + change[0],
       position[1] + change[1],
     )
-    return self.environment[new_position] == 0
+    return self.state[new_position] == 1
 
   def validActions(self):
     '''
@@ -191,35 +224,24 @@ class RLAgent:
         self.position[0] + change[0],
         self.position[1] + change[1],
       )
-      if (self.environment[new_position] == 0):
+      if (self.state[new_position] == 1):
         valid_actions.append(action)
     # return valid actions
     return valid_actions
 
-  def updateVisTable(self, position, open_squares):
-    '''
-    Update the visibility table for the agent using the given set of
-    visbile open squares and the position to be updated.
-    '''
-    if (position in self.visibility_table):
-      self.visibility_table[position] = self.visibility_table[position].union(open_squares)
-    else:
-      self.visibility_table[position] = open_squares
+  def modelAction(self):
+    # add batch dimension to the observation if only a single example was provided
+    observation = np.expand_dims(self.state, axis=0)
 
-  def updateState(self, open_squares, wall_squares, visibilityTable):
-    '''
-    This function allows the agent to update its belief state of the environment
-    based off the open and wall squares it is able to perceive.
-    '''
-    # update visibility table for current position
-    self.updateVisTable(self.position, open_squares)
-    # update environment and visibility table for open squares
-    for square in open_squares:
-      self.environment[square] = 0
-      self.updateVisTable(square, visibilityTable[square])
-    # update environment for wall squares
-    for square in wall_squares:
-      self.environment[square] = 1
+    # grab probabilites for each action by passing observation into model
+    logits = model.predict(observation)
+    
+    # select action based off logits above
+    action = tf.random.categorical(logits, num_samples=1)
+    action = action.numpy().flatten()[0]
+
+    # return action as string value from MOVE_ACTIONS_LIST
+    return MOVE_ACTIONS_LIST[action]
 
 
 
@@ -228,6 +250,7 @@ class RLAgent:
 
 # Functionally define layers for convenience
 # All convolutional layers will have ReLu activation
+Embedding = tf.keras.layers.Embedding
 Conv2D = functools.partial(tf.keras.layers.Conv2D, padding='same', activation='relu')
 BatchNorm = tf.keras.layers.BatchNormalization
 Flatten = tf.keras.layers.Flatten
@@ -236,8 +259,11 @@ Dense = tf.keras.layers.Dense
 def createModel():
   model = tf.keras.models.Sequential([
 
+    # Embedding layer to convert integers to dense vector space
+    # Embedding(3,2),
+
     # Convolutional layers
-    Conv2D(filters=32, kernel_size=5, strides=2,  input_shape = (51,51,2)),
+    Conv2D(filters=32, kernel_size=5, strides=2),
     BatchNorm(),
     Conv2D(filters=48, kernel_size=5, strides=2),
     BatchNorm(),
@@ -279,7 +305,7 @@ def getAction(model, observations, single=True):
   return action[0] if single else action
 
 
-# Memeory of Agent
+# Memory of Agent For Training
 ################################################################################
 class Memory:
   def __init__(self): 
@@ -290,12 +316,14 @@ class Memory:
       self.observations = []
       self.actions = []
       self.rewards = []
+      self.game_ended = []
 
   # Add observations, actions, rewards to memory
-  def add_to_memory(self, new_observation, new_action, new_reward): 
+  def add_to_memory(self, new_observation, new_action, new_reward, game_ended): 
       self.observations.append(new_observation)
       self.actions.append(new_action)
       self.rewards.append(new_reward)
+      self.game_ended.append(game_ended)
 
 # Helper function to combine a list of Memory objects into a single Memory.
 #     This will be very useful for batching.
@@ -303,13 +331,13 @@ def aggregate_memories(memories):
   batch_memory = Memory()
   
   for memory in memories:
-    for step in zip(memory.observations, memory.actions, memory.rewards):
+    for step in zip(memory.observations, memory.actions, memory.rewards, memory.game_ended):
       batch_memory.add_to_memory(*step)
   
   return batch_memory
 
 
-# Reward Function
+# Reward and Discounted Reward Functions
 ################################################################################
 def normalize(x):
   x -= np.mean(x)
@@ -322,18 +350,21 @@ def normalize(x):
 #   gamma: discounting factor.
 # Returns:
 #   normalized discounted reward
-def discount_rewards(rewards, game_ended=False, gamma=0.99): 
+def discount_rewards(rewards, game_ended, gamma=0.99): 
   discounted_rewards = np.zeros_like(rewards)
   R = 0
   for t in reversed(range(0, len(rewards))):
-      # Reset the sum if the game ended
-      if game_ended:
+      # Reset the sum if the game ended (will be True value in array if that is the case)
+      if game_ended[t]:
         R = 0
       # update the total discounted reward as before
       R = R * gamma + rewards[t]
       discounted_rewards[t] = R
       
   return normalize(discounted_rewards)
+
+def rewardFunc(new_positions):
+  return new_positions*.1 - 1
 
 
 # Rollout Function
@@ -347,13 +378,17 @@ def discount_rewards(rewards, game_ended=False, gamma=0.99):
 #
 # Arguments:
 #   batch_size: number of batches, to be processed serially
-#   env: environment
+#   game: game of hide and seek
 #   model: Pong agent model
 #   choose_action: choose_action function
 # Returns:
 #   memories: array of Memory buffers, of length batch_size, corresponding to the
 #     episode executions from the rollout
-def collect_rollout(batch_size, env, model, choose_action):
+def collect_rollout(batch_size, game, model, choose_action):
+
+  # reset the game (i.e. build new environment board for batches)
+  # this means all samples in batch use the same board
+  game.resetEnv()
 
   # Holder array for the Memory buffers
   memories = []
@@ -361,26 +396,43 @@ def collect_rollout(batch_size, env, model, choose_action):
   # Process batches serially by iterating through them
   for b in range(batch_size):
 
-    # Instantiate Memory buffer, restart the environment
+    # Instantiate Memory buffer, restart the environment, and grab observation
     memory = Memory()
-    current_observation = env.reset()
-    next_observation = current_observation
-    done = False # tracks whether the episode (game) is done or not
 
-    while not done:
+    # reset the hide and seek game, and run the hider process
+    game.resetAgents()
+    game.runHiderSequence()
+
+    # let agent perceive environment initially
+    open , walls , visibilityTable = game.environment.perceiveEnv(game.seeking_agent)
+    hider_position = game.foundHider(open,walls,game.hiding_agent.position)
+    game.seeking_agent.updateState(open,walls,visibilityTable,hider_position)
+
+    # grab current state of the seeker as current observation
+    current_observation = game.seeker.state.copy()
+    next_observation = current_observation
+
+    while hider_position == None:
 
       # get next action based on observed change to environment
       action = choose_action(model, current_observation)
       
       # Take the chosen action
-      # TODO 
-      next_observation, reward, done, info = env.step(action)
+      game.seeking_agent.performAction(MOVE_ACTIONS_LIST[action])
 
-      # save the observed frame difference, the action that was taken, and the resulting reward
-      memory.add_to_memory(current_observation, action, reward) # TODO
+      # Allow agent to perceive environment
+      open , walls , visibilityTable = game.environment.perceiveEnv(game.seeking_agent)
+      hider_position = game.foundHider(open,walls,game.hiding_agent.position)
+      new_positions = game.seeking_agent.updateState(open,walls,visibilityTable,hider_position)
+
+      # grab reward from previous action
+      reward = rewardFunc(new_positions)
+
+      # save the observed state, the action that was taken, the resulting reward, and state of the game (over or not)
+      memory.add_to_memory(current_observation, action, reward, hider_position == None)
 
       # update observation
-      current_observation = next_observation
+      current_observation = game.seeker.state.copy()
     
     # Add the memory from this batch to the array of all Memory buffers
     memories.append(memory)
@@ -428,20 +480,41 @@ def train_step(model, optimizer, observations, actions, discounted_rewards):
 if __name__ == "__main__":
   ### Hyperparameters and setup for training ###
   ##############################################
-  # Hyperparameters
-  learning_rate = 1e-3
+  # Parameters for Env. and Hiding Agent
+  hiding_time = 400
+  vision_range = 3
+  hiding_alg = "rhc"
+  hider_weights = (1/3,0,2/3)
+  h_randomness = .5
+  
+  # Hyperparameters for Training
+  initial_learning_rate = .1
+  decay_steps = 10
+  decay_rate = .99
   MAX_ITERS = 10 # increase the maximum to train longer
-  batch_size = 10 # number of batches to run
+  batch_size = 1 # number of batches to run
 
-  # Model, optimizer
+  # Initialize Environment
+  environment = Environment(vision_range)
+  env_shape = environment.board.shape
+  middle_pos = environment.getMiddlePos()
+
+  # Initialize Agents (Including RL Model in Seeking Agent)
+  hiding_agent = HidingAgent(hiding_alg,env_shape,middle_pos,vision_range,hider_weights,h_randomness,hiding_time)
   model = createModel()
-  optimizer = tf.keras.optimizers.Adam(learning_rate)
+  seeking_agent = RLAgent(env_shape,middle_pos,vision_range, model)
+
+  # Optimizer
+  lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+    initial_learning_rate,
+    decay_steps=decay_steps,
+    decay_rate=decay_rate,
+    staircase=True)
+  optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
   iteration = 0 # counter for training steps
 
-  # Batches and environment
-  # To parallelize batches, we need to make multiple copies of the environment.
-  # TODO
-  envs = [create_pong_env() for _ in range(batch_size)] # For parallelization
+  # Initialize Hide and Seek Game
+  game = HideAndSeek(environment,hiding_agent,seeking_agent,hiding_time)
 
   ### Training Pong ###
   #####################
@@ -451,10 +524,7 @@ if __name__ == "__main__":
     tic = time.time()
 
     # RL agent algorithm. By default, uses serial batch processing.
-    # TODO
-    memories = collect_rollout(batch_size, env, model, getAction)
-
-    toc = time.time()
+    memories = collect_rollout(batch_size, game, model, getAction)
 
     # Aggregate memories from multiple batches
     batch_memory = aggregate_memories(memories)
@@ -476,5 +546,9 @@ if __name__ == "__main__":
     )
       
     iteration += 1 # Mark next episode
+
+    toc = time.time()
+
+    print("Finished Episode {}: runtime = {}".format(iteration,toc-tic))
 
     # Add something to save model once a certain iteration is hit, say every 100

@@ -33,7 +33,7 @@ class HideAndSeek:
   Within this class are the various methods for each of the parts of the game.
   '''
 
-  def __init__(self, environment, hiding_agent, seeking_agent, hiding_time, sleep_time):
+  def __init__(self, environment, hiding_agent, seeking_agent, hiding_time, sleep_time=0):
     '''
     Initializes new Hiding Agent instance.
     '''
@@ -118,6 +118,11 @@ class HideAndSeek:
     self.seeking_agent.performAction(action)
     # update game clock
     self.tickClock()
+
+  def runHiderSequence(self):
+    for i in range(self.hiding_time):
+      self.hidingStep()
+    self.resetClock()
 
   def simulateGame(self, print_updates=False):
     '''
