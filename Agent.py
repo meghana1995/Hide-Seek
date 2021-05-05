@@ -257,7 +257,11 @@ class Agent:
         valid_actions.append(action)
     # if valid actions is empty then backtrack, else pick a random action
     if (len(valid_actions) == 0):
-      return INVERSE_ACTIONS[self.current_path[-1]]
+      if (len(self.current_path) > 0):
+        return INVERSE_ACTIONS[self.current_path[-1]]
+      # this means board has been fully explored, so do nothing
+      else:
+        return "nothing"
     else:
       random_index = math.floor(np.random.random()*len(valid_actions))
       return valid_actions[random_index]
