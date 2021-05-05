@@ -277,7 +277,7 @@ class Agent:
         self.position[1] + change[1],
       )
       if (self.environment[new_position] == 0):
-        hideability = self.hidabilityScore(new_position)
+        hideability = self.hideability(new_position)
         if (hideability > best_score):
           best_score = hideability
           best_action = action
@@ -300,7 +300,7 @@ class Agent:
         self.position[1] + change[1],
       )
       if (self.environment[new_position] == 0 and new_position not in self.visited_positions):
-        hideability = self.hidabilityScore(new_position)
+        hideability = self.hideability(new_position)
         if (hideability > best_score):
           best_score = hideability
           best_action = action
@@ -330,7 +330,7 @@ class Agent:
         self.position[1] + change[1],
       )
       if (self.environment[new_position] == 0 and new_position not in self.visited_positions):
-        hideability = self.hidabilityScore(new_position)
+        hideability = self.hideability(new_position)
         valid_actions.append(action)
         action_scores.append(hideability)
     # if no valid actions then backtrack, else pick random action based on scores
@@ -365,7 +365,7 @@ class Agent:
         self.position[1] + change[1],
       )
       if (self.environment[new_position] == 0 and new_position not in self.visited_positions):
-        hideability = self.hidabilityScore(new_position)
+        hideability = self.hideability(new_position)
         valid_actions.append(action)
         action_scores.append(hideability)
     # if no valid actions then backtrack, else pick random action based on scores
