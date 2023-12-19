@@ -24,8 +24,7 @@ def normalize(values):
   so that the results can be interpreted as probablities. Assumes each value
   is non-negative.
   '''
-  total = sum(values)
-  if (total == 0):
+  if ((total := sum(values)) == 0):
     n = len(values)
     return [1 / n for value in values]
   else:
@@ -40,8 +39,7 @@ def weightedNormalize(values,r):
   be chosen from the range [0,1].
   '''
   p = np.array(values)
-  m = p.max()
-  if (m == 0):
+  if ((m := p.max()) == 0):
     p = np.full(p.shape,1/p.shape[0])
   elif (r == 0):
     p = np.where(p < m, 0, 1)
