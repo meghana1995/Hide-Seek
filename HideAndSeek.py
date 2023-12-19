@@ -82,8 +82,7 @@ class HideAndSeek:
     checks if the hider is positioned in one of the perceivable squares. If so,
     it returns the hider position, else it returns None.
     '''
-    found_hider = hider_position in open_set or hider_position in wall_set
-    if found_hider:
+    if found_hider := hider_position in open_set or hider_position in wall_set:
       return hider_position
     else:
       return None
